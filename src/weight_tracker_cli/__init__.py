@@ -1,3 +1,7 @@
 """SQLite-backed terminal weight tracker."""
 
-__version__ = "0.1.0"
+from importlib.metadata import version
+
+
+def get_version() -> str:
+    return version("weight-tracker-cli")

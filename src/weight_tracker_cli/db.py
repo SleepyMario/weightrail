@@ -3,6 +3,7 @@ from __future__ import annotations
 import csv
 import sqlite3
 from dataclasses import dataclass
+from datetime import date
 from pathlib import Path
 
 
@@ -71,10 +72,16 @@ def import_csv(connection: sqlite3.Connection, csv_path: Path) -> int:
             reader = csv.DictReader(handle)
             if reader.fieldnames != ["date", "weight_kg"]:
                 raise ValueError("CSV header must be: date,weight_kg")
-            entries = [
-                WeightEntry(date=row["date"], weight_kg=parse_weight(row["weight_kg"]))
-                for row in reader
-            ]
+            entries = []
+            for row_number, row in enumerate(reader, start=2):
+                if is_blank_row(row):
+                    continue
+                entries.append(
+                    WeightEntry(
+                        date=parse_date(row["date"], row_number),
+                        weight_kg=parse_weight(row["weight_kg"]),
+                    )
+                )
     except OSError as exc:
         raise DatabaseError(f"Unable to read CSV {csv_path}: {exc}") from exc
     except ValueError as exc:
@@ -104,6 +111,19 @@ def parse_weight(value: str) -> float:
     return weight
 
 
+def parse_date(value: str, row_number: int | None = None) -> str:
+    try:
+        parsed = date.fromisoformat(value)
+    except ValueError as exc:
+        location = f" on row {row_number}" if row_number is not None else ""
+        raise ValueError(f"date must use YYYY-MM-DD{location}: {value!r}") from exc
+    return parsed.isoformat()
+
+
 def validate_weight(weight_kg: float) -> None:
     if weight_kg <= 0:
         raise ValueError("weight must be positive")
+
+
+def is_blank_row(row: dict[str, str | None]) -> bool:
+    return all(value is None or value.strip() == "" for value in row.values())
