@@ -1,71 +1,167 @@
 # weight-tracker-cli
 
-Simple SQLite-backed terminal weight tracker.
+`weight-tracker-cli` is a small, local-first command-line weight tracker.
 
-The CLI stores daily weight measurements, prints a table, renders a terminal graph with `plotext`, and summarizes the linear trend with `numpy`.
+It stores measurements in a local SQLite database, prints recorded rows, draws a terminal chart, and reports a simple linear trend summary. No account is required, no network service is used, and missing dates stay missing instead of being filled or interpolated automatically.
 
 ## Features
 
-- SQLite primary data store.
-- Default database path: `~/.local/share/weight-tracker-cli/weights.sqlite`.
-- CLI command: `weight-tracker`.
-- Uses the Asia/Taipei local date by default when adding today's weight.
-- Missing dates are absent rows. They are not blank rows and are not interpolated.
-- Imports seed data from CSV.
-- No pandas dependency.
+- Daily weight recording from the terminal.
+- `Asia/Taipei` date default for positional entries.
+- CSV import for seed or migrated data.
+- Full record display in date order.
+- Terminal chart using `plotext`.
+- Linear trend summary using NumPy.
+- Alternate database paths with `--db-path`.
+- Local SQLite storage.
 
-## Install For Development
+## Installation
 
-```sh
+### Development or source installation
+
+The repository currently has no configured remote. Replace `<repository-url>` after the public remote exists:
+
+```bash
+git clone <repository-url>
+cd weight-tracker-cli
 python -m venv .venv
-. .venv/bin/activate
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install .
+```
+
+From an already checked-out source tree:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install .
+```
+
+### Editable development installation
+
+```bash
 python -m pip install -e .
 ```
 
+For test and build tools:
+
+```bash
+python -m pip install -e ".[dev]"
+```
+
+### pipx
+
+After a repository URL or release archive exists, install with `pipx` from that source:
+
+```bash
+pipx install <repository-url>
+```
+
+From a local checkout:
+
+```bash
+pipx install .
+```
+
+### Gentoo
+
+An ebuild skeleton is present at:
+
+```text
+gentoo/app-misc/weight-tracker-cli/weight-tracker-cli-0.1.0.ebuild
+```
+
+Current Gentoo status:
+
+- The ebuild is prepared for `app-misc/weight-tracker-cli`.
+- It depends on `dev-python/numpy` and `dev-python/plotext`.
+- On this machine, `dev-python/plotext` is available through Guru.
+- Systems without Guru may need Guru enabled or a local `plotext` ebuild.
+- The versioned ebuild cannot be completely release-tested against a remote tarball until a real release URL exists.
+- `Manifest` is intentionally empty until the final release archive URL and distfile exist.
+
 ## Usage
 
-Add or update today's Asia/Taipei weight, then print the table, graph, and trend:
-
-```sh
-weight-tracker 123.4
-```
-
-Show all recorded data:
-
-```sh
+```bash
+weight-tracker --help
+weight-tracker --version
+weight-tracker 122.8
 weight-tracker --show
-```
-
-Print only the numeric summary and trend:
-
-```sh
 weight-tracker --summary
-```
-
-Import seed data:
-
-```sh
 weight-tracker --import data/seed.csv
-```
-
-Use a custom database:
-
-```sh
 weight-tracker --db-path /path/to/weights.sqlite --show
 ```
 
+A positional weight records or updates the current `Asia/Taipei` date:
+
+```bash
+weight-tracker 122.8
+```
+
+After adding or updating the row, the command prints the full table, graph, and trend summary.
+
+## Date Behaviour
+
+When you pass a positional weight, the CLI uses the current date in:
+
+```text
+Asia/Taipei
+```
+
+The date is stored as `YYYY-MM-DD`. If a row already exists for that date, the existing row is updated. Duplicate rows for the same date are not created.
+
+Imported CSV dates are used exactly as supplied after `YYYY-MM-DD` validation.
+
+## Database
+
+The default database path is:
+
+```text
+~/.local/share/weight-tracker-cli/weights.sqlite
+```
+
+Parent directories are created automatically when the database is opened.
+
+Use an alternate path with:
+
+```bash
+weight-tracker --db-path /path/to/weights.sqlite --show
+```
+
+Back up the database by copying the SQLite file:
+
+```bash
+cp ~/.local/share/weight-tracker-cli/weights.sqlite weights.sqlite.backup
+```
+
+Deleting the database file deletes the recorded data. The CLI will create a new empty database the next time it runs.
+
 ## CSV Format
+
+The importer requires this exact header:
 
 ```csv
 date,weight_kg
-2026-07-05,123.4
+2026-06-20,122.8
+2026-06-21,121.8
 ```
 
-Dates must use `YYYY-MM-DD`. Weights must be positive numbers.
+Rules:
 
-## Trend Output
+- `date` must use `YYYY-MM-DD`.
+- `weight_kg` must be a positive decimal number.
+- Blank rows are ignored.
+- Duplicate dates update the existing row; the later imported row wins.
+- The importer parses and validates all rows before writing, so malformed dates or weights leave the database unchanged.
+- Missing required columns fail with a clear error.
 
-The summary includes:
+## Summary Calculation
+
+The summary uses NumPy linear regression over recorded measurements only. Missing dates are not filled in.
+
+The output includes:
 
 - first date;
 - latest date;
@@ -77,34 +173,57 @@ The summary includes:
 - slope in kg/week;
 - approximate equation `w(d) ≈ md + b`, where `d` is days since the first recorded entry.
 
-Missing days are ignored by the regression. Only recorded measurements are used.
+This is a simple numerical trend summary, not a medical prediction.
 
-## Gentoo
+## Errors
 
-An example ebuild is included at:
+Common errors are reported with a nonzero exit status:
 
-```text
-gentoo/app-misc/weight-tracker-cli/weight-tracker-cli-0.1.0.ebuild
+- invalid weight values, including zero and negative values;
+- missing CSV files;
+- malformed CSV headers or rows;
+- unwritable database locations;
+- corrupt SQLite database files.
+
+## Privacy
+
+- All data is local.
+- No telemetry is collected.
+- Nothing is uploaded automatically.
+- No remote service is contacted by the application.
+
+## Development
+
+```bash
+python -m pip install -e ".[dev]"
+pytest
+python -m build
 ```
 
-It assumes these runtime dependencies:
+The release helper runs the local validation flow:
 
-- `dev-python/numpy`
-- `dev-python/plotext`
+```bash
+scripts/check-release.sh
+```
 
-On this system, `dev-python/plotext` is available from the Guru repository. If `dev-python/plotext` is unavailable in your enabled Gentoo repositories, a local overlay ebuild for `plotext` may be required.
+It builds artifacts and smoke-tests them in temporary virtual environments. It does not push, publish, tag, or touch the real default database.
+
+## Release Process
+
+See [docs/RELEASING.md](docs/RELEASING.md) for the local release checklist.
 
 ## GitHub Setup
 
 This directory is ready to become a separate public GitHub repository:
 
-```sh
-git init
-git add .
-git commit -m "Initial weight tracker CLI"
-git branch -M main
+```bash
 git remote add origin git@github.com:<USER>/weight-tracker-cli.git
 git push -u origin main
+git push origin v0.1.0
 ```
 
-Do not push until you have created the remote repository and configured credentials.
+Create the remote before running those commands. Do not push or publish as part of local release validation.
+
+## Licence
+
+MIT. See [LICENSE](LICENSE).
