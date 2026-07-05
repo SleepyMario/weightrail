@@ -42,6 +42,12 @@ dev = [
 [project.scripts]
 weight-tracker = "weight_tracker_cli.cli:main"
 
+[project.urls]
+Homepage = "https://github.com/SleepyMario/weight-tracker-cli"
+Repository = "https://github.com/SleepyMario/weight-tracker-cli"
+Issues = "https://github.com/SleepyMario/weight-tracker-cli/issues"
+Changelog = "https://github.com/SleepyMario/weight-tracker-cli/blob/main/CHANGELOG.md"
+
 [tool.setuptools.packages.find]
 where = ["src"]
 

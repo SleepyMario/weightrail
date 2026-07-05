@@ -1,6 +1,12 @@
 # Releasing
 
-This project is prepared for local release validation. Do not push, publish, upload release artifacts, or create a remote release unless that is requested separately.
+This project is prepared for local release validation and GitHub release publication at:
+
+```text
+https://github.com/SleepyMario/weight-tracker-cli
+```
+
+Do not publish to PyPI unless that is requested separately.
 
 ## Local Release Checklist
 
@@ -63,14 +69,14 @@ This project is prepared for local release validation. Do not push, publish, upl
    git tag -a v0.1.0 -m "weight-tracker-cli 0.1.0"
    ```
 
-9. Push commit and tag only after a remote exists:
+9. Push commit and tag:
 
    ```bash
    git push -u origin main
    git push origin v0.1.0
    ```
 
-10. Create a GitHub release or publish to PyPI only as a separate explicit action.
+10. Create a GitHub release and upload `dist/weight_tracker_cli-0.1.0.tar.gz`, `dist/weight_tracker_cli-0.1.0-py3-none-any.whl`, and `dist/SHA256SUMS`.
 
 11. Update the Gentoo ebuild `SRC_URI` and regenerate `Manifest` after the final release archive URL exists.
 

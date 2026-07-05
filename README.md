@@ -19,10 +19,8 @@ It stores measurements in a local SQLite database, prints recorded rows, draws a
 
 ### Development or source installation
 
-The repository currently has no configured remote. Replace `<repository-url>` after the public remote exists:
-
 ```bash
-git clone <repository-url>
+git clone git@github.com:SleepyMario/weight-tracker-cli.git
 cd weight-tracker-cli
 python -m venv .venv
 source .venv/bin/activate
@@ -53,10 +51,10 @@ python -m pip install -e ".[dev]"
 
 ### pipx
 
-After a repository URL or release archive exists, install with `pipx` from that source:
+Install directly from GitHub with `pipx`:
 
 ```bash
-pipx install <repository-url>
+pipx install git+https://github.com/SleepyMario/weight-tracker-cli.git
 ```
 
 From a local checkout:
@@ -79,8 +77,8 @@ Current Gentoo status:
 - It depends on `dev-python/numpy` and `dev-python/plotext`.
 - On this machine, `dev-python/plotext` is available through Guru.
 - Systems without Guru may need Guru enabled or a local `plotext` ebuild.
-- The versioned ebuild cannot be completely release-tested against a remote tarball until a real release URL exists.
-- `Manifest` is intentionally empty until the final release archive URL and distfile exist.
+- The versioned ebuild uses the GitHub release tarball after the release is published.
+- `Manifest` must be regenerated with Gentoo tooling after release assets exist.
 
 ## Usage
 
@@ -214,15 +212,19 @@ See [docs/RELEASING.md](docs/RELEASING.md) for the local release checklist.
 
 ## GitHub Setup
 
-This directory is ready to become a separate public GitHub repository:
+The public repository is:
+
+```text
+https://github.com/SleepyMario/weight-tracker-cli
+```
+
+The configured SSH remote should be:
 
 ```bash
-git remote add origin git@github.com:<USER>/weight-tracker-cli.git
+git remote add origin git@github.com:SleepyMario/weight-tracker-cli.git
 git push -u origin main
 git push origin v0.1.0
 ```
-
-Create the remote before running those commands. Do not push or publish as part of local release validation.
 
 ## Licence
 
