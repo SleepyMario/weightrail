@@ -6,15 +6,13 @@ This directory contains a preparation ebuild for:
 app-misc/weight-tracker-cli
 ```
 
-The ebuild is not fully release-testable yet because this repository has no configured public remote and no published `v0.1.0` release archive.
+The ebuild targets the public `v0.1.0` GitHub release archive:
 
-Before using the ebuild in a real overlay:
+```text
+https://github.com/SleepyMario/weight-tracker-cli/archive/refs/tags/v0.1.0.tar.gz
+```
 
-1. Create the public repository.
-2. Push the `v0.1.0` tag.
-3. Create or identify the final release archive URL.
-4. Replace the placeholder `SRC_URI` comment in `weight-tracker-cli-0.1.0.ebuild` with the real URL.
-5. Regenerate `Manifest`.
+Before using the ebuild in a real overlay, regenerate `Manifest` with Gentoo tooling and run a clean emerge test in a Gentoo environment.
 
 Dependencies:
 
