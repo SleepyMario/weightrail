@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "weight-tracker-cli"
+version = "0.1.0"
+description = "Simple SQLite-backed terminal weight tracker."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+  { name = "Ashwin" }
+]
+dependencies = [
+  "numpy",
+  "plotext"
+]
+
+[project.scripts]
+weight-tracker = "weight_tracker_cli.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
