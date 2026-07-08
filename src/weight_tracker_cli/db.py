@@ -40,9 +40,13 @@ def connect(db_path: Path) -> sqlite3.Connection:
         raise DatabaseError(f"Unable to prepare database directory for {db_path}: {exc}") from exc
 
 
-def upsert_weight(connection: sqlite3.Connection, date: str, weight_kg: float) -> None:
+def upsert_weight(connection: sqlite3.Connection, date: str, weight_kg: float) -> str:
     validate_weight(weight_kg)
     try:
+        existing = connection.execute(
+            "SELECT 1 FROM weights WHERE date = ?",
+            (date,),
+        ).fetchone()
         connection.execute(
             """
             INSERT INTO weights(date, weight_kg)
@@ -52,6 +56,7 @@ def upsert_weight(connection: sqlite3.Connection, date: str, weight_kg: float) -
             (date, weight_kg),
         )
         connection.commit()
+        return "updated" if existing else "recorded"
     except sqlite3.Error as exc:
         raise DatabaseError(f"Unable to save weight for {date}: {exc}") from exc
 

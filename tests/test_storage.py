@@ -20,9 +20,9 @@ def test_adds_updates_and_reads_records_in_date_order(tmp_path):
     db_path = tmp_path / "weights.sqlite"
 
     with db.connect(db_path) as connection:
-        db.upsert_weight(connection, "2026-07-02", 122.8)
-        db.upsert_weight(connection, "2026-07-01", 122.0)
-        db.upsert_weight(connection, "2026-07-02", 123.0)
+        assert db.upsert_weight(connection, "2026-07-02", 122.8) == "recorded"
+        assert db.upsert_weight(connection, "2026-07-01", 122.0) == "recorded"
+        assert db.upsert_weight(connection, "2026-07-02", 123.0) == "updated"
         entries = db.list_weights(connection)
 
     assert entries == [

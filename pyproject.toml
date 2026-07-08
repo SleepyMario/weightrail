@@ -33,6 +33,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+gui = [
+  "PyGObject"
+]
 dev = [
   "build",
   "pytest",
@@ -41,6 +44,7 @@ dev = [
 
 [project.scripts]
 weight-tracker = "weight_tracker_cli.cli:main"
+weight-tracker-gui = "weight_tracker_cli.gui:main"
 
 [project.urls]
 Homepage = "https://github.com/SleepyMario/weight-tracker-cli"

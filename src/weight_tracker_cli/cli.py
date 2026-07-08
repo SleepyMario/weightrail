@@ -10,7 +10,7 @@ from zoneinfo import ZoneInfo
 from . import get_version
 from .db import DEFAULT_DB_PATH, DatabaseError, connect, import_csv, list_weights, parse_weight, upsert_weight
 from .graph import render_graph
-from .stats import calculate_trend, format_summary
+from .stats import calculate_stats, calculate_trend, format_stats, format_summary
 
 
 TAIPEI = ZoneInfo("Asia/Taipei")
@@ -25,17 +25,27 @@ def main(argv: list[str] | None = None, today_provider: Callable[[], date] | Non
             print(f"weight-tracker {get_version()}")
             return 0
 
+        stats_requested = args.stats or args.weight == "stats"
+        if args.stats and args.weight is not None:
+            raise ValueError("--stats cannot be combined with a weight")
+
         db_path = Path(args.db_path).expanduser()
         with connect(db_path) as connection:
             if args.import_path is not None:
                 imported = import_csv(connection, Path(args.import_path).expanduser())
                 print(f"Imported {imported} rows.")
 
-            if args.weight is not None:
+            if args.weight is not None and not stats_requested:
                 today = (today_provider or taipei_today)().isoformat()
-                upsert_weight(connection, today, parse_weight(args.weight))
+                weight = parse_weight(args.weight)
+                action = upsert_weight(connection, today, weight)
+                print(f"{action.title()} {weight:.1f} kg for {today}.")
 
             entries = list_weights(connection)
+
+        if stats_requested:
+            print(format_stats(calculate_stats(entries)))
+            return 0
 
         if args.summary:
             print(format_summary(calculate_trend(entries)))
@@ -61,12 +71,14 @@ def build_parser() -> argparse.ArgumentParser:
         description="Track daily weight in a local SQLite database.",
         epilog=(
             "A positional weight records or updates today's Asia/Taipei date. "
+            "Use 'weight-tracker stats' for basic statistics. "
             f"Default database: {DEFAULT_DB_PATH}"
         ),
     )
-    parser.add_argument("weight", nargs="?", help="weight in kilograms for today's Asia/Taipei date")
+    parser.add_argument("weight", nargs="?", help="weight in kilograms for today's Asia/Taipei date, or 'stats'")
     parser.add_argument("--show", action="store_true", help="show recorded rows, terminal graph, and trend summary")
     parser.add_argument("--summary", action="store_true", help="show only the numeric trend summary")
+    parser.add_argument("--stats", action="store_true", help="show basic weight statistics")
     parser.add_argument("--import", dest="import_path", help="import date,weight_kg CSV rows and update existing dates")
     parser.add_argument("--db-path", default=str(DEFAULT_DB_PATH), help="SQLite database path")
     parser.add_argument("--version", action="store_true", help="show version and exit")

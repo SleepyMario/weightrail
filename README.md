@@ -11,7 +11,9 @@ It stores measurements in a local SQLite database, prints recorded rows, draws a
 - CSV import for seed or migrated data.
 - Full record display in date order.
 - Terminal chart using `plotext`.
+- Basic plain-text statistics.
 - Linear trend summary using NumPy.
+- Optional GTK Linux GUI.
 - Alternate database paths with `--db-path`.
 - Local SQLite storage.
 
@@ -48,6 +50,14 @@ For test and build tools:
 ```bash
 python -m pip install -e ".[dev]"
 ```
+
+For the optional GTK Linux GUI:
+
+```bash
+python -m pip install -e ".[gui]"
+```
+
+On Linux distributions, PyGObject and GTK are often best installed through the system package manager.
 
 ### pipx
 
@@ -86,10 +96,13 @@ Current Gentoo status:
 weight-tracker --help
 weight-tracker --version
 weight-tracker 122.8
+weight-tracker stats
 weight-tracker --show
+weight-tracker --stats
 weight-tracker --summary
 weight-tracker --import data/seed.csv
 weight-tracker --db-path /path/to/weights.sqlite --show
+weight-tracker-gui
 ```
 
 A positional weight records or updates the current `Asia/Taipei` date:
@@ -99,6 +112,24 @@ weight-tracker 122.8
 ```
 
 After adding or updating the row, the command prints the full table, graph, and trend summary.
+
+Show the basic stats without the graph:
+
+```bash
+weight-tracker stats
+```
+
+Launch the small GTK frontend:
+
+```bash
+weight-tracker-gui
+```
+
+The CLI and GUI use the same SQLite database by default. The GUI also accepts an alternate database path:
+
+```bash
+weight-tracker-gui --db-path /path/to/weights.sqlite
+```
 
 ## Date Behaviour
 
@@ -157,7 +188,19 @@ Rules:
 
 ## Summary Calculation
 
-The summary uses NumPy linear regression over recorded measurements only. Missing dates are not filled in.
+`weight-tracker stats` reports:
+
+- entry count;
+- first and latest entry dates;
+- latest weight;
+- change since the previous entry;
+- total change since the first entry;
+- 7-day and 30-day averages when at least two entries exist in the window;
+- highest and lowest recorded weights;
+- missing days between the first and latest entry;
+- simple trend slope in kg/day and kg/week.
+
+`weight-tracker --summary` keeps the older linear-regression-focused output. The summary uses NumPy linear regression over recorded measurements only. Missing dates are not filled in.
 
 The output includes:
 
