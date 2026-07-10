@@ -73,6 +73,26 @@ From a local checkout:
 pipx install .
 ```
 
+### Docker
+
+The Docker image runs the CLI by default. Pull it from Docker Hub:
+
+```bash
+docker pull sleepiestmario/weightrail:latest
+```
+
+Mount a host directory at `/data` and select the database file with
+`--db-path` to keep measurements between container runs:
+
+```bash
+mkdir -p data
+docker run --rm -v "$PWD/data:/data" sleepiestmario/weightrail:latest \
+  --db-path /data/weights.sqlite stats
+```
+
+Only the Docker image uses the Weightrail name for now. The package and CLI
+remain `weight-tracker-cli` and `weight-tracker`.
+
 ### Gentoo
 
 An ebuild skeleton is present at:
