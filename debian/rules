@@ -1,0 +1,15 @@
+#!/usr/bin/make -f
+
+export HOME = $(CURDIR)/debian/tmp-home
+export XDG_DATA_HOME = $(CURDIR)/debian/tmp-xdg-data
+
+%:
+	dh $@ --buildsystem=pybuild
+
+override_dh_auto_test:
+	dh_auto_test -- --test-pytest
+
+override_dh_auto_install:
+	dh_auto_install
+	rm -f debian/weightrail/usr/bin/weight-tracker-gui \
+		debian/weightrail/usr/lib/python3/dist-packages/weight_tracker_cli/gui.py

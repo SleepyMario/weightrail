@@ -1,0 +1,57 @@
+.TH WEIGHTRAIL 1 "2026-07-11" "Weightrail 0.1.0" "User Commands"
+.SH NAME
+weightrail \- record and review local weight measurements
+.SH SYNOPSIS
+.B weightrail
+.RI [ options ] " [weight|stats]"
+.br
+.B weight-tracker
+.RI [ options ] " [weight|stats]"
+.SH DESCRIPTION
+Weightrail is a local-first terminal weight tracker.  It stores measurements
+in a per-user SQLite database and never requires a service or network account.
+The command
+.B weight-tracker
+is a compatibility name for
+.BR weightrail .
+.SH COMMANDS AND OPTIONS
+A positional
+.I weight
+records or updates today's date in the Asia/Taipei timezone.
+The positional command
+.B stats
+prints basic statistics.
+.TP
+.B --show
+Show recorded rows, a terminal graph when the optional plotext dependency is
+available, and a trend summary.
+.TP
+.B --stats
+Show basic statistics.
+.TP
+.B --summary
+Show the numeric trend summary.
+.TP
+.BI --import " FILE"
+Import CSV data with the header date,weight_kg.
+.TP
+.BI --db-path " PATH"
+Use a specific SQLite database path.
+.TP
+.B --version
+Print the version and exit.
+.SH ENVIRONMENT
+.B HOME
+determines the default data location.  Use
+.B --db-path
+to keep data in another location, including one selected through local XDG
+configuration.
+.SH FILES
+.TP
+.I ~/.local/share/weight-tracker-cli/weights.sqlite
+Default per-user SQLite database.  Package removal and purge do not delete it.
+.SH EXIT STATUS
+0 on success; 1 for application errors.  Argument parsing errors use the
+standard argparse nonzero status.
+.SH HOMEPAGE
+https://github.com/SleepyMario/weight-tracker-cli

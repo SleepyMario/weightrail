@@ -28,11 +28,13 @@ classifiers = [
   "Topic :: Utilities"
 ]
 dependencies = [
-  "numpy",
-  "plotext"
+  "numpy"
 ]
 
 [project.optional-dependencies]
+graph = [
+  "plotext"
+]
 gui = [
   "PyGObject"
 ]
@@ -43,6 +45,7 @@ dev = [
 ]
 
 [project.scripts]
+weightrail = "weight_tracker_cli.cli:main"
 weight-tracker = "weight_tracker_cli.cli:main"
 weight-tracker-gui = "weight_tracker_cli.gui:main"
 

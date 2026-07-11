@@ -112,7 +112,8 @@ def test_help_mentions_default_database_and_taipei(capsys):
 
     captured = capsys.readouterr()
     assert exc.value.code == 0
-    assert str(DEFAULT_DB_PATH) in captured.out
+    assert "Default database:" in captured.out
+    assert DEFAULT_DB_PATH.name in captured.out
     assert "Asia/Taipei" in captured.out
 
 

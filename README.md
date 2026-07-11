@@ -10,7 +10,7 @@ It stores measurements in a local SQLite database, prints recorded rows, draws a
 - `Asia/Taipei` date default for positional entries.
 - CSV import for seed or migrated data.
 - Full record display in date order.
-- Terminal chart using `plotext`.
+- Terminal chart using optional `plotext`.
 - Basic plain-text statistics.
 - Linear trend summary using NumPy.
 - Optional GTK Linux GUI.
@@ -73,6 +73,28 @@ From a local checkout:
 pipx install .
 ```
 
+### Ubuntu and Debian package (local build)
+
+Weightrail has an initial Debian package definition for locally built packages;
+it is not published in the Ubuntu or Debian archives. Build it with normal
+Debian tooling, then install the resulting artifact:
+
+```bash
+sudo apt install ./weightrail_0.1.0-1_all.deb
+```
+
+The package installs both `/usr/bin/weightrail` (the product command) and
+`/usr/bin/weight-tracker` (the compatibility command). Upgrading the package
+does not change existing records. Removing or purging the package does not
+delete user data, which remains at
+`~/.local/share/weight-tracker-cli/weights.sqlite` by default.
+
+This package is currently intended for local validation and distribution; it
+does not imply archive inclusion. The Ubuntu package uses Ubuntu's NumPy
+package. Ubuntu 26.04 does not package `plotext`, so terminal graphs show a
+clear availability message unless that optional dependency is supplied by the
+user outside the Debian package.
+
 ### Docker
 
 The Docker image runs the CLI by default. Pull it from Docker Hub:
@@ -90,8 +112,9 @@ docker run --rm -v "$PWD/data:/data" sleepiestmario/weightrail:latest \
   --db-path /data/weights.sqlite stats
 ```
 
-Only the Docker image uses the Weightrail name for now. The package and CLI
-remain `weight-tracker-cli` and `weight-tracker`.
+The Docker image uses the Weightrail name. The Debian package is `weightrail`;
+the source distribution remains `weight-tracker-cli`, and `weight-tracker`
+remains a compatibility command.
 
 ### Gentoo
 
@@ -113,6 +136,8 @@ Current Gentoo status:
 ## Usage
 
 ```bash
+weightrail --help
+weightrail --version
 weight-tracker --help
 weight-tracker --version
 weight-tracker 122.8

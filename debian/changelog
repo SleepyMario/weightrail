@@ -1,0 +1,5 @@
+weightrail (0.1.0-1) resolute; urgency=medium
+
+  * Initial Debian package.
+
+ -- Ashwin <ashwin@users.noreply.github.com>  Sat, 11 Jul 2026 12:00:00 +0800
