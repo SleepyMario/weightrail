@@ -1,12 +1,12 @@
-%global upstream_name weight-tracker-cli
+%global upstream_name weightrail
 
 Name:           weightrail
-Version:        0.1.0
+Version:        0.2.0
 Release:        1%{?dist}
 Summary:        Local-first terminal weight tracker
 
 License:        MIT
-URL:            https://github.com/SleepyMario/weight-tracker-cli
+URL:            https://github.com/SleepyMario/weightrail
 Source0:        %{upstream_name}-%{version}.tar.gz
 
 BuildArch:      noarch
@@ -35,27 +35,29 @@ application and does not require a network service or system daemon.
 %pyproject_install
 install -Dpm 0644 packaging/rpm/README.md \
     %{buildroot}%{_docdir}/%{name}/README.rpm.md
-rm -f %{buildroot}%{_bindir}/weightrail
-rm -f %{buildroot}%{_bindir}/weight-tracker-gui
-rm -f %{buildroot}%{python3_sitelib}/weight_tracker_cli/gui.py
-rm -f %{buildroot}%{python3_sitelib}/weight_tracker_cli/__pycache__/gui.*.pyc
-sed -i '/^weightrail = /d; /^weight-tracker-gui = /d' \
-    %{buildroot}%{python3_sitelib}/weight_tracker_cli-%{version}.dist-info/entry_points.txt
-%pyproject_save_files -l weight_tracker_cli
-sed -i '/weight_tracker_cli\/gui\.py/d; /weight_tracker_cli\/__pycache__\/gui\./d' %{pyproject_files}
+rm -f %{buildroot}%{_bindir}/weightrail-gui
+rm -f %{buildroot}%{python3_sitelib}/weightrail/gui.py
+rm -f %{buildroot}%{python3_sitelib}/weightrail/__pycache__/gui.*.pyc
+sed -i '/^weightrail-gui = /d' \
+    %{buildroot}%{python3_sitelib}/weightrail-%{version}.dist-info/entry_points.txt
+%pyproject_save_files -l weightrail
+sed -i '/weightrail\/gui\.py/d; /weightrail\/__pycache__\/gui\./d' %{pyproject_files}
 
 %check
 export HOME="%{_builddir}/weightrail-test-home"
 export XDG_DATA_HOME="$HOME/.local/share"
 mkdir -p "$XDG_DATA_HOME"
 %pytest --ignore=tests/test_gui.py
-%pyproject_check_import -e weight_tracker_cli.gui
+%pyproject_check_import -e weightrail.gui
 
 %files -f %{pyproject_files}
 %doc CHANGELOG.md README.md
 %{_docdir}/%{name}/README.rpm.md
-%{_bindir}/weight-tracker
+%{_bindir}/weightrail
 
 %changelog
+* Mon Jul 13 2026 Ashwin <ashwin@users.noreply.github.com> - 0.2.0-1
+- Complete the canonical Weightrail naming migration
+
 * Mon Jul 13 2026 Ashwin <ashwin@users.noreply.github.com> - 0.1.0-1
 - Add the initial RPM package

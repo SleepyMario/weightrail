@@ -9,7 +9,7 @@ PYTHON_COMPAT=( python3_{10..13} )
 inherit distutils-r1
 
 DESCRIPTION="Simple SQLite-backed terminal weight tracker"
-HOMEPAGE="https://github.com/SleepyMario/weight-tracker-cli"
+HOMEPAGE="https://github.com/SleepyMario/weightrail"
 SRC_URI="https://github.com/SleepyMario/${PN}/archive/refs/tags/v${PV}.tar.gz -> ${P}.tar.gz"
 S="${WORKDIR}/${P}"
 

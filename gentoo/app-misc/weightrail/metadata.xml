@@ -5,6 +5,6 @@
     <name>Ashwin</name>
   </maintainer>
   <upstream>
-    <remote-id type="github">SleepyMario/weight-tracker-cli</remote-id>
+    <remote-id type="github">SleepyMario/weightrail</remote-id>
   </upstream>
 </pkgmetadata>

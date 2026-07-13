@@ -2,8 +2,8 @@ from datetime import date, datetime, timezone
 
 import pytest
 
-from weight_tracker_cli import cli
-from weight_tracker_cli.db import DEFAULT_DB_PATH
+from weightrail import cli
+from weightrail.db import DEFAULT_DB_PATH
 
 
 def test_show_empty_database_is_clear(tmp_path, capsys):
@@ -112,7 +112,8 @@ def test_help_mentions_default_database_and_taipei(capsys):
 
     captured = capsys.readouterr()
     assert exc.value.code == 0
-    assert str(DEFAULT_DB_PATH) in captured.out
+    assert "Default database:" in captured.out
+    assert DEFAULT_DB_PATH.name in captured.out
     assert "Asia/Taipei" in captured.out
 
 
@@ -121,7 +122,7 @@ def test_version_output(capsys):
 
     captured = capsys.readouterr()
     assert exit_code == 0
-    assert captured.out == "weight-tracker 0.1.0\n"
+    assert captured.out == "weightrail 0.2.0\n"
     assert captured.err == ""
 
 

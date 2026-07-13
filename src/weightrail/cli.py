@@ -8,7 +8,17 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 from . import get_version
-from .db import DEFAULT_DB_PATH, DatabaseError, connect, import_csv, list_weights, parse_weight, upsert_weight
+from .db import (
+    DEFAULT_DB_PATH,
+    LEGACY_DB_PATH,
+    DatabaseError,
+    connect,
+    import_csv,
+    list_weights,
+    migrate_legacy_database,
+    parse_weight,
+    upsert_weight,
+)
 from .graph import render_graph
 from .stats import calculate_stats, calculate_trend, format_stats, format_summary
 
@@ -22,7 +32,7 @@ def main(argv: list[str] | None = None, today_provider: Callable[[], date] | Non
 
     try:
         if args.version:
-            print(f"weight-tracker {get_version()}")
+            print(f"weightrail {get_version()}")
             return 0
 
         stats_requested = args.stats or args.weight == "stats"
@@ -30,6 +40,12 @@ def main(argv: list[str] | None = None, today_provider: Callable[[], date] | Non
             raise ValueError("--stats cannot be combined with a weight")
 
         db_path = Path(args.db_path).expanduser()
+        if db_path == DEFAULT_DB_PATH and migrate_legacy_database():
+            print(
+                f"Copied existing Weightrail data from {LEGACY_DB_PATH} to {DEFAULT_DB_PATH}; "
+                "the original was kept as a rollback copy.",
+                file=sys.stderr,
+            )
         with connect(db_path) as connection:
             if args.import_path is not None:
                 imported = import_csv(connection, Path(args.import_path).expanduser())
@@ -71,7 +87,7 @@ def build_parser() -> argparse.ArgumentParser:
         description="Track daily weight in a local SQLite database.",
         epilog=(
             "A positional weight records or updates today's Asia/Taipei date. "
-            "Use 'weight-tracker stats' for basic statistics. "
+            "Use 'weightrail stats' for basic statistics. "
             f"Default database: {DEFAULT_DB_PATH}"
         ),
     )

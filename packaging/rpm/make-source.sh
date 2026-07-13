@@ -14,12 +14,12 @@ if [[ $# -ne 1 ]]; then
 fi
 
 output_dir="$(mkdir -p "$1" && cd "$1" && pwd)"
-archive="$output_dir/weight-tracker-cli-$version.tar.gz"
+archive="$output_dir/weightrail-$version.tar.gz"
 epoch="${SOURCE_DATE_EPOCH:-$(git -C "$root" log -1 --format=%ct)}"
 stage="$(mktemp -d "${TMPDIR:-/tmp}/weightrail-rpm-source.XXXXXX")"
 trap 'rm -rf "$stage"' EXIT
 
-topdir="$stage/weight-tracker-cli-$version"
+topdir="$stage/weightrail-$version"
 mkdir -p "$topdir/packaging/rpm"
 cp -a \
     "$root/CHANGELOG.md" \
@@ -54,6 +54,6 @@ tar \
     --numeric-owner \
     --format=gnu \
     -C "$stage" \
-    -cf - "weight-tracker-cli-$version" | gzip -n >"$archive"
+    -cf - "weightrail-$version" | gzip -n >"$archive"
 
 printf '%s\n' "$archive"

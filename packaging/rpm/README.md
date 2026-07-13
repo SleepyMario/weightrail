@@ -1,10 +1,9 @@
 # RPM packaging
 
 This directory contains the initial Fedora-family RPM definition for the
-command-line application. The RPM is named `weightrail`; it deliberately keeps
-the existing Python distribution (`weight-tracker-cli`), import package
-(`weight_tracker_cli`), command (`weight-tracker`), and
-default database path (`~/.local/share/weight-tracker-cli/weights.sqlite`).
+command-line application. The RPM, Python distribution, import package, and
+command are all named `weightrail`; the default database path is
+`~/.local/share/weightrail/weights.sqlite`.
 The optional GTK command and module are not included.
 
 ## Dependencies

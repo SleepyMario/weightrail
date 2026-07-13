@@ -10,4 +10,4 @@ COPY src ./src
 
 RUN python -m pip install --no-cache-dir .
 
-ENTRYPOINT ["weight-tracker"]
+ENTRYPOINT ["weightrail"]

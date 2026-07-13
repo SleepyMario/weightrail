@@ -1,13 +1,24 @@
 from __future__ import annotations
 
 import csv
+import os
+import shutil
 import sqlite3
+import tempfile
 from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
 
 
-DEFAULT_DB_PATH = Path.home() / ".local" / "share" / "weight-tracker-cli" / "weights.sqlite"
+def _data_home() -> Path:
+    configured = os.environ.get("XDG_DATA_HOME")
+    if configured:
+        return Path(configured).expanduser()
+    return Path.home() / ".local" / "share"
+
+
+DEFAULT_DB_PATH = _data_home() / "weightrail" / "weights.sqlite"
+LEGACY_DB_PATH = Path.home() / ".local" / "share" / "weight-tracker-cli" / "weights.sqlite"
 
 
 class DatabaseError(RuntimeError):
@@ -18,6 +29,44 @@ class DatabaseError(RuntimeError):
 class WeightEntry:
     date: str
     weight_kg: float
+
+
+def migrate_legacy_database(
+    new_path: Path = DEFAULT_DB_PATH,
+    legacy_path: Path = LEGACY_DB_PATH,
+) -> bool:
+    """Atomically copy a legacy default database without replacing new data."""
+    if new_path.exists() or not legacy_path.is_file():
+        return False
+
+    temporary_path: Path | None = None
+    try:
+        new_path.parent.mkdir(parents=True, exist_ok=True)
+        file_descriptor, temporary_name = tempfile.mkstemp(
+            prefix=f".{new_path.name}.",
+            suffix=".migrating",
+            dir=new_path.parent,
+        )
+        os.close(file_descriptor)
+        temporary_path = Path(temporary_name)
+        shutil.copy2(legacy_path, temporary_path)
+        with temporary_path.open("rb") as handle:
+            os.fsync(handle.fileno())
+        try:
+            os.link(temporary_path, new_path)
+        except FileExistsError:
+            return False
+        return True
+    except OSError as exc:
+        raise DatabaseError(
+            f"Unable to migrate the legacy database from {legacy_path} to {new_path}: {exc}"
+        ) from exc
+    finally:
+        if temporary_path is not None:
+            try:
+                temporary_path.unlink(missing_ok=True)
+            except OSError:
+                pass
 
 
 def connect(db_path: Path) -> sqlite3.Connection:

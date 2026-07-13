@@ -1,6 +1,6 @@
-# weight-tracker-cli
+# Weightrail
 
-`weight-tracker-cli` is a small, local-first command-line weight tracker.
+`weightrail` is a small, local-first command-line weight tracker.
 
 It stores measurements in a local SQLite database, prints recorded rows, draws a terminal chart, and reports a simple linear trend summary. No account is required, no network service is used, and missing dates stay missing instead of being filled or interpolated automatically.
 
@@ -10,7 +10,7 @@ It stores measurements in a local SQLite database, prints recorded rows, draws a
 - `Asia/Taipei` date default for positional entries.
 - CSV import for seed or migrated data.
 - Full record display in date order.
-- Terminal chart using `plotext`.
+- Terminal chart using optional `plotext`.
 - Basic plain-text statistics.
 - Linear trend summary using NumPy.
 - Optional GTK Linux GUI.
@@ -22,8 +22,8 @@ It stores measurements in a local SQLite database, prints recorded rows, draws a
 ### Development or source installation
 
 ```bash
-git clone git@github.com:SleepyMario/weight-tracker-cli.git
-cd weight-tracker-cli
+git clone git@github.com:SleepyMario/weightrail.git
+cd weightrail
 python -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
@@ -64,7 +64,7 @@ On Linux distributions, PyGObject and GTK are often best installed through the s
 Install directly from GitHub with `pipx`:
 
 ```bash
-pipx install git+https://github.com/SleepyMario/weight-tracker-cli.git
+pipx install git+https://github.com/SleepyMario/weightrail.git
 ```
 
 From a local checkout:
@@ -72,6 +72,25 @@ From a local checkout:
 ```bash
 pipx install .
 ```
+
+### Ubuntu and Debian package (local build)
+
+Weightrail has an initial Debian package definition for locally built packages;
+it is not published in the Ubuntu or Debian archives. Build it with normal
+Debian tooling, then install the resulting artifact:
+
+```bash
+sudo apt install ./weightrail_0.2.0-1_all.deb
+```
+
+The package installs `/usr/bin/weightrail`. Upgrading the package does not
+change existing records. Removing or purging the package does not delete user
+data, which remains at `~/.local/share/weightrail/weights.sqlite` by default.
+
+This package is currently intended for local validation and distribution; it
+does not imply archive inclusion. Ubuntu 26.04 does not package `plotext`, so
+terminal graphs show a clear availability message unless that optional
+dependency is supplied by the user outside the Debian package.
 
 ### Docker
 
@@ -90,20 +109,19 @@ docker run --rm -v "$PWD/data:/data" sleepiestmario/weightrail:latest \
   --db-path /data/weights.sqlite stats
 ```
 
-Only the Docker image uses the Weightrail name for now. The package and CLI
-remain `weight-tracker-cli` and `weight-tracker`.
+The Docker image, Python distribution, and command all use the Weightrail name.
 
 ### Gentoo
 
 An ebuild skeleton is present at:
 
 ```text
-gentoo/app-misc/weight-tracker-cli/weight-tracker-cli-0.1.0.ebuild
+gentoo/app-misc/weightrail/weightrail-0.2.0.ebuild
 ```
 
 Current Gentoo status:
 
-- The ebuild is prepared for `app-misc/weight-tracker-cli`.
+- The ebuild is prepared for `app-misc/weightrail`.
 - It depends on `dev-python/numpy` and `dev-python/plotext`.
 - On this machine, `dev-python/plotext` is available through Guru.
 - Systems without Guru may need Guru enabled or a local `plotext` ebuild.
@@ -113,22 +131,22 @@ Current Gentoo status:
 ## Usage
 
 ```bash
-weight-tracker --help
-weight-tracker --version
-weight-tracker 122.8
-weight-tracker stats
-weight-tracker --show
-weight-tracker --stats
-weight-tracker --summary
-weight-tracker --import data/seed.csv
-weight-tracker --db-path /path/to/weights.sqlite --show
-weight-tracker-gui
+weightrail --help
+weightrail --version
+weightrail 122.8
+weightrail stats
+weightrail --show
+weightrail --stats
+weightrail --summary
+weightrail --import data/seed.csv
+weightrail --db-path /path/to/weights.sqlite --show
+weightrail-gui
 ```
 
 A positional weight records or updates the current `Asia/Taipei` date:
 
 ```bash
-weight-tracker 122.8
+weightrail 122.8
 ```
 
 After adding or updating the row, the command prints the full table, graph, and trend summary.
@@ -136,19 +154,19 @@ After adding or updating the row, the command prints the full table, graph, and 
 Show the basic stats without the graph:
 
 ```bash
-weight-tracker stats
+weightrail stats
 ```
 
 Launch the small GTK frontend:
 
 ```bash
-weight-tracker-gui
+weightrail-gui
 ```
 
 The CLI and GUI use the same SQLite database by default. The GUI also accepts an alternate database path:
 
 ```bash
-weight-tracker-gui --db-path /path/to/weights.sqlite
+weightrail-gui --db-path /path/to/weights.sqlite
 ```
 
 ## Date Behaviour
@@ -168,21 +186,28 @@ Imported CSV dates are used exactly as supplied after `YYYY-MM-DD` validation.
 The default database path is:
 
 ```text
-~/.local/share/weight-tracker-cli/weights.sqlite
+~/.local/share/weightrail/weights.sqlite
 ```
 
 Parent directories are created automatically when the database is opened.
 
+On the first default-path startup after upgrading from the former project name,
+Weightrail atomically copies
+`~/.local/share/weight-tracker-cli/weights.sqlite` to the new location when the
+legacy file is present and the new file is absent. The legacy file remains
+untouched as a rollback copy. If the new database already exists, it always
+wins. Explicit `--db-path` values are never migrated.
+
 Use an alternate path with:
 
 ```bash
-weight-tracker --db-path /path/to/weights.sqlite --show
+weightrail --db-path /path/to/weights.sqlite --show
 ```
 
 Back up the database by copying the SQLite file:
 
 ```bash
-cp ~/.local/share/weight-tracker-cli/weights.sqlite weights.sqlite.backup
+cp ~/.local/share/weightrail/weights.sqlite weights.sqlite.backup
 ```
 
 Deleting the database file deletes the recorded data. The CLI will create a new empty database the next time it runs.
@@ -208,7 +233,7 @@ Rules:
 
 ## Summary Calculation
 
-`weight-tracker stats` reports:
+`weightrail stats` reports:
 
 - entry count;
 - first and latest entry dates;
@@ -220,7 +245,7 @@ Rules:
 - missing days between the first and latest entry;
 - simple trend slope in kg/day and kg/week.
 
-`weight-tracker --summary` keeps the older linear-regression-focused output. The summary uses NumPy linear regression over recorded measurements only. Missing dates are not filled in.
+`weightrail --summary` keeps the older linear-regression-focused output. The summary uses NumPy linear regression over recorded measurements only. Missing dates are not filled in.
 
 The output includes:
 
@@ -278,15 +303,15 @@ See [docs/RELEASING.md](docs/RELEASING.md) for the local release checklist.
 The public repository is:
 
 ```text
-https://github.com/SleepyMario/weight-tracker-cli
+https://github.com/SleepyMario/weightrail
 ```
 
 The configured SSH remote should be:
 
 ```bash
-git remote add origin git@github.com:SleepyMario/weight-tracker-cli.git
+git remote add origin git@github.com:SleepyMario/weightrail.git
 git push -u origin main
-git push origin v0.1.0
+git push origin v0.2.0
 ```
 
 ## Licence

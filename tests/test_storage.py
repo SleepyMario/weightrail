@@ -1,9 +1,10 @@
+import stat
 from pathlib import Path
 
 import pytest
 
-from weight_tracker_cli import db
-from weight_tracker_cli.db import DatabaseError, WeightEntry
+from weightrail import db
+from weightrail.db import DatabaseError, WeightEntry
 
 
 def test_creates_new_database_and_schema(tmp_path):
@@ -49,6 +50,81 @@ def test_alternate_db_path_creates_parent_directories(tmp_path):
         db.upsert_weight(connection, "2026-07-01", 122.0)
 
     assert db_path.exists()
+
+
+def test_migration_with_no_legacy_database_does_nothing(tmp_path):
+    new_path = tmp_path / "new" / "weights.sqlite"
+    legacy_path = tmp_path / "legacy" / "weights.sqlite"
+
+    assert db.migrate_legacy_database(new_path, legacy_path) is False
+    assert not new_path.exists()
+
+
+def test_migration_copies_legacy_database_and_preserves_mode(tmp_path):
+    legacy_path = tmp_path / "legacy" / "weights.sqlite"
+    new_path = tmp_path / "new" / "weights.sqlite"
+    legacy_path.parent.mkdir()
+    legacy_path.write_bytes(b"legacy database contents")
+    legacy_path.chmod(0o640)
+
+    assert db.migrate_legacy_database(new_path, legacy_path) is True
+    assert new_path.read_bytes() == legacy_path.read_bytes()
+    assert stat.S_IMODE(new_path.stat().st_mode) == 0o640
+    assert legacy_path.read_bytes() == b"legacy database contents"
+
+
+def test_migration_with_new_database_only_uses_new_database(tmp_path):
+    new_path = tmp_path / "new" / "weights.sqlite"
+    legacy_path = tmp_path / "legacy" / "weights.sqlite"
+    new_path.parent.mkdir()
+    new_path.write_bytes(b"new database")
+
+    assert db.migrate_legacy_database(new_path, legacy_path) is False
+    assert new_path.read_bytes() == b"new database"
+
+
+def test_migration_never_overwrites_new_database_when_both_exist(tmp_path):
+    new_path = tmp_path / "new" / "weights.sqlite"
+    legacy_path = tmp_path / "legacy" / "weights.sqlite"
+    new_path.parent.mkdir()
+    legacy_path.parent.mkdir()
+    new_path.write_bytes(b"new database")
+    legacy_path.write_bytes(b"legacy database")
+
+    assert db.migrate_legacy_database(new_path, legacy_path) is False
+    assert new_path.read_bytes() == b"new database"
+    assert legacy_path.read_bytes() == b"legacy database"
+
+
+def test_migration_copy_failure_leaves_both_paths_safe(tmp_path, monkeypatch):
+    new_path = tmp_path / "new" / "weights.sqlite"
+    legacy_path = tmp_path / "legacy" / "weights.sqlite"
+    legacy_path.parent.mkdir()
+    legacy_path.write_bytes(b"legacy database")
+
+    def fail_copy(*_args, **_kwargs):
+        raise OSError("simulated copy failure")
+
+    monkeypatch.setattr(db.shutil, "copy2", fail_copy)
+    with pytest.raises(DatabaseError, match="simulated copy failure"):
+        db.migrate_legacy_database(new_path, legacy_path)
+
+    assert not new_path.exists()
+    assert legacy_path.read_bytes() == b"legacy database"
+    assert list(new_path.parent.glob("*.migrating")) == []
+
+
+def test_repeated_startup_after_migration_does_not_copy_again(tmp_path):
+    new_path = tmp_path / "new" / "weights.sqlite"
+    legacy_path = tmp_path / "legacy" / "weights.sqlite"
+    legacy_path.parent.mkdir()
+    legacy_path.write_bytes(b"legacy database")
+
+    assert db.migrate_legacy_database(new_path, legacy_path) is True
+    new_path.write_bytes(b"current database")
+    assert db.migrate_legacy_database(new_path, legacy_path) is False
+    assert new_path.read_bytes() == b"current database"
+    assert legacy_path.read_bytes() == b"legacy database"
 
 
 def test_corrupt_database_fails_cleanly(tmp_path):

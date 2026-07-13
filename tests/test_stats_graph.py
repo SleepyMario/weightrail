@@ -1,8 +1,10 @@
+import sys
+
 import pytest
 
-from weight_tracker_cli.db import WeightEntry
-from weight_tracker_cli.graph import render_graph
-from weight_tracker_cli.stats import calculate_stats, calculate_trend, format_stats, format_summary
+from weightrail.db import WeightEntry
+from weightrail.graph import render_graph
+from weightrail.stats import calculate_stats, calculate_trend, format_stats, format_summary
 
 
 def test_summary_zero_records_is_clear():
@@ -98,8 +100,16 @@ def test_graph_uses_plotext_without_crashing(monkeypatch):
         def build(self):
             return "graph"
 
-    monkeypatch.setattr("weight_tracker_cli.graph.plt", FakePlot())
+    monkeypatch.setitem(sys.modules, "plotext", FakePlot())
 
     assert render_graph([WeightEntry("2026-07-01", 122.0), WeightEntry("2026-07-03", 123.0)]) == "graph"
     assert ("scatter", [0, 2], [122.0, 123.0], "dot") in calls
     assert ("plot", [0, 2], [122.0, 123.0]) in calls
+
+
+def test_graph_reports_when_optional_plotext_is_unavailable(monkeypatch):
+    monkeypatch.setitem(sys.modules, "plotext", None)
+
+    assert render_graph([WeightEntry("2026-07-01", 122.0)]) == (
+        "Terminal graph unavailable: install the optional 'plotext' dependency."
+    )

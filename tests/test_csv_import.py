@@ -1,6 +1,6 @@
 import pytest
 
-from weight_tracker_cli import db
+from weightrail import db
 
 
 def write_csv(path, text):

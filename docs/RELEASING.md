@@ -3,7 +3,7 @@
 This project is prepared for local release validation and GitHub release publication at:
 
 ```text
-https://github.com/SleepyMario/weight-tracker-cli
+https://github.com/SleepyMario/weightrail
 ```
 
 Do not publish to PyPI unless that is requested separately.
@@ -38,45 +38,45 @@ Do not publish to PyPI unless that is requested separately.
 5. Install and test the wheel in a clean virtual environment:
 
    ```bash
-   python -m venv /tmp/weight-tracker-wheel-test
-   /tmp/weight-tracker-wheel-test/bin/python -m pip install dist/weight_tracker_cli-0.1.0-py3-none-any.whl
-   /tmp/weight-tracker-wheel-test/bin/weight-tracker --version
-   /tmp/weight-tracker-wheel-test/bin/weight-tracker --db-path /tmp/wheel-weights.sqlite 123.4
-   /tmp/weight-tracker-wheel-test/bin/weight-tracker --db-path /tmp/wheel-weights.sqlite --show
-   /tmp/weight-tracker-wheel-test/bin/weight-tracker --db-path /tmp/wheel-weights.sqlite --summary
+   python -m venv /tmp/weightrail-wheel-test
+   /tmp/weightrail-wheel-test/bin/python -m pip install dist/weightrail-0.2.0-py3-none-any.whl
+   /tmp/weightrail-wheel-test/bin/weightrail --version
+   /tmp/weightrail-wheel-test/bin/weightrail --db-path /tmp/wheel-weights.sqlite 123.4
+   /tmp/weightrail-wheel-test/bin/weightrail --db-path /tmp/wheel-weights.sqlite --show
+   /tmp/weightrail-wheel-test/bin/weightrail --db-path /tmp/wheel-weights.sqlite --summary
    ```
 
 6. Install and test the source distribution in a separate clean virtual environment:
 
    ```bash
-   python -m venv /tmp/weight-tracker-sdist-test
-   /tmp/weight-tracker-sdist-test/bin/python -m pip install dist/weight_tracker_cli-0.1.0.tar.gz
-   /tmp/weight-tracker-sdist-test/bin/weight-tracker --version
-   /tmp/weight-tracker-sdist-test/bin/weight-tracker --db-path /tmp/sdist-weights.sqlite 123.4
-   /tmp/weight-tracker-sdist-test/bin/weight-tracker --db-path /tmp/sdist-weights.sqlite --summary
+   python -m venv /tmp/weightrail-sdist-test
+   /tmp/weightrail-sdist-test/bin/python -m pip install dist/weightrail-0.2.0.tar.gz
+   /tmp/weightrail-sdist-test/bin/weightrail --version
+   /tmp/weightrail-sdist-test/bin/weightrail --db-path /tmp/sdist-weights.sqlite 123.4
+   /tmp/weightrail-sdist-test/bin/weightrail --db-path /tmp/sdist-weights.sqlite --summary
    ```
 
 7. Review archive contents:
 
    ```bash
-   tar -tzf dist/weight_tracker_cli-0.1.0.tar.gz
-   python -m zipfile -l dist/weight_tracker_cli-0.1.0-py3-none-any.whl
+   tar -tzf dist/weightrail-0.2.0.tar.gz
+   python -m zipfile -l dist/weightrail-0.2.0-py3-none-any.whl
    ```
 
 8. Create the local annotated tag:
 
    ```bash
-   git tag -a v0.1.0 -m "weight-tracker-cli 0.1.0"
+   git tag -a v0.2.0 -m "weightrail 0.2.0"
    ```
 
 9. Push commit and tag:
 
    ```bash
    git push -u origin main
-   git push origin v0.1.0
+   git push origin v0.2.0
    ```
 
-10. Create a GitHub release and upload `dist/weight_tracker_cli-0.1.0.tar.gz`, `dist/weight_tracker_cli-0.1.0-py3-none-any.whl`, and `dist/SHA256SUMS`.
+10. Create a GitHub release and upload `dist/weightrail-0.2.0.tar.gz`, `dist/weightrail-0.2.0-py3-none-any.whl`, and `dist/SHA256SUMS`.
 
 11. Update the Gentoo ebuild `SRC_URI` and regenerate `Manifest` after the final release archive URL exists.
 

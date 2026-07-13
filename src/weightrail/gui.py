@@ -6,7 +6,16 @@ from collections.abc import Sequence
 from pathlib import Path
 
 from .cli import taipei_today
-from .db import DEFAULT_DB_PATH, DatabaseError, connect, list_weights, parse_weight, upsert_weight
+from .db import (
+    DEFAULT_DB_PATH,
+    LEGACY_DB_PATH,
+    DatabaseError,
+    connect,
+    list_weights,
+    migrate_legacy_database,
+    parse_weight,
+    upsert_weight,
+)
 from .stats import WeightStats, calculate_stats, format_optional_change, format_optional_weight
 
 
@@ -14,7 +23,7 @@ RECENT_ENTRY_LIMIT = 10
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Small GTK frontend for weight-tracker.")
+    parser = argparse.ArgumentParser(description="Small GTK frontend for Weightrail.")
     parser.add_argument("--db-path", default=str(DEFAULT_DB_PATH), help="SQLite database path")
     args = parser.parse_args(argv)
 
@@ -32,18 +41,30 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(f"Details: {exc}", file=sys.stderr)
         return 1
 
-    window = WeightTrackerWindow(Gtk, Path(args.db_path).expanduser())
+    db_path = Path(args.db_path).expanduser()
+    try:
+        if db_path == DEFAULT_DB_PATH and migrate_legacy_database():
+            print(
+                f"Copied existing Weightrail data from {LEGACY_DB_PATH} to {DEFAULT_DB_PATH}; "
+                "the original was kept as a rollback copy.",
+                file=sys.stderr,
+            )
+    except DatabaseError as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 1
+
+    window = WeightrailWindow(Gtk, db_path)
     window.connect("destroy", Gtk.main_quit)
     window.show_all()
     Gtk.main()
     return 0
 
 
-class WeightTrackerWindow:
+class WeightrailWindow:
     def __init__(self, Gtk, db_path: Path):
         self.Gtk = Gtk
         self.db_path = db_path
-        self.window = Gtk.Window(title="Weight Tracker")
+        self.window = Gtk.Window(title="Weightrail")
         self.window.set_border_width(16)
         self.window.set_default_size(620, 520)
 
@@ -51,7 +72,7 @@ class WeightTrackerWindow:
         self.window.add(root)
 
         title = Gtk.Label()
-        title.set_markup("<b>Weight Tracker</b>")
+        title.set_markup("<b>Weightrail</b>")
         title.set_xalign(0)
         root.pack_start(title, False, False, 0)
 

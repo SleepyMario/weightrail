@@ -1,6 +1,6 @@
 import pytest
 
-from weight_tracker_cli import gui
+from weightrail import gui
 
 
 def test_gui_module_imports_without_loading_gtk():

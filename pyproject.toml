@@ -3,8 +3,8 @@ requires = ["setuptools>=69", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "weight-tracker-cli"
-version = "0.1.0"
+name = "weightrail"
+version = "0.2.0"
 description = "Local-first SQLite-backed terminal weight tracker."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -28,11 +28,13 @@ classifiers = [
   "Topic :: Utilities"
 ]
 dependencies = [
-  "numpy",
-  "plotext"
+  "numpy"
 ]
 
 [project.optional-dependencies]
+graph = [
+  "plotext"
+]
 gui = [
   "PyGObject"
 ]
@@ -43,14 +45,14 @@ dev = [
 ]
 
 [project.scripts]
-weight-tracker = "weight_tracker_cli.cli:main"
-weight-tracker-gui = "weight_tracker_cli.gui:main"
+weightrail = "weightrail.cli:main"
+weightrail-gui = "weightrail.gui:main"
 
 [project.urls]
-Homepage = "https://github.com/SleepyMario/weight-tracker-cli"
-Repository = "https://github.com/SleepyMario/weight-tracker-cli"
-Issues = "https://github.com/SleepyMario/weight-tracker-cli/issues"
-Changelog = "https://github.com/SleepyMario/weight-tracker-cli/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/SleepyMario/weightrail"
+Repository = "https://github.com/SleepyMario/weightrail"
+Issues = "https://github.com/SleepyMario/weightrail/issues"
+Changelog = "https://github.com/SleepyMario/weightrail/blob/main/CHANGELOG.md"
 
 [tool.setuptools.packages.find]
 where = ["src"]

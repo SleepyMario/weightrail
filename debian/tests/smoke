@@ -1,0 +1,15 @@
+#!/bin/sh
+set -eu
+
+tmpdir=$(mktemp -d)
+trap 'rm -rf "$tmpdir"' EXIT HUP INT TERM
+export HOME="$tmpdir/home"
+export XDG_DATA_HOME="$HOME/.local/share"
+db="$XDG_DATA_HOME/weightrail/weights.sqlite"
+
+weightrail --help >/dev/null
+weightrail --version >/dev/null
+weightrail --db-path "$db" 72.5 >/dev/null
+weightrail --db-path "$db" stats | grep -q 'Entries: 1'
+weightrail --db-path "$db" --show >/dev/null
+test -f "$db"

@@ -4,4 +4,4 @@ from importlib.metadata import version
 
 
 def get_version() -> str:
-    return version("weight-tracker-cli")
+    return version("weightrail")

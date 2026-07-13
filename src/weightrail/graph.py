@@ -2,14 +2,17 @@ from __future__ import annotations
 
 from datetime import date
 
-import plotext as plt
-
 from .db import WeightEntry
 
 
 def render_graph(entries: list[WeightEntry]) -> str:
     if not entries:
         return "No measurements to graph."
+
+    try:
+        import plotext as plt
+    except ImportError:
+        return "Terminal graph unavailable: install the optional 'plotext' dependency."
 
     first_date = date.fromisoformat(entries[0].date)
     days = [(date.fromisoformat(entry.date) - first_date).days for entry in entries]
