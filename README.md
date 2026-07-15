@@ -94,9 +94,12 @@ dependency is supplied by the user outside the Debian package.
 
 ### Docker
 
-The Docker image runs the CLI by default. Pull it from Docker Hub:
+The published Docker image is CLI-only, targets Linux amd64, and runs
+`weightrail` as its entry point. Pull either the fixed version or the current
+latest tag from Docker Hub:
 
 ```bash
+docker pull sleepiestmario/weightrail:0.2.0
 docker pull sleepiestmario/weightrail:latest
 ```
 
@@ -109,7 +112,18 @@ docker run --rm -v "$PWD/data:/data" sleepiestmario/weightrail:latest \
   --db-path /data/weights.sqlite stats
 ```
 
-The Docker image, Python distribution, and command all use the Weightrail name.
+The final image runs as non-root UID/GID 1000, and the mounted directory must
+be writable by that identity. The image contains NumPy and SQLite support but
+does not include GTK or the optional `plotext` graph dependency. Commands that
+would draw a graph instead report that `plotext` is unavailable; statistics
+and summaries remain fully functional.
+
+### Additional Linux packaging candidates
+
+Local, validated packaging instructions are available for
+[Arch Linux/AUR](packaging/arch/README.md),
+[Flatpak](packaging/flatpak/README.md), and [Snap](packaging/snap/README.md).
+These candidates are not published to AUR, Flathub, or the Snap Store.
 
 ### Gentoo
 
@@ -125,8 +139,8 @@ Current Gentoo status:
 - It depends on `dev-python/numpy` and `dev-python/plotext`.
 - On this machine, `dev-python/plotext` is available through Guru.
 - Systems without Guru may need Guru enabled or a local `plotext` ebuild.
-- The versioned ebuild uses the GitHub release tarball after the release is published.
-- `Manifest` must be regenerated with Gentoo tooling after release assets exist.
+- The versioned ebuild uses the GitHub v0.2.0 tag archive.
+- `Manifest` records the validated release archive hashes.
 
 ## Usage
 
