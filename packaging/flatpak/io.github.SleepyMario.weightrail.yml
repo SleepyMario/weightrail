@@ -1,0 +1,48 @@
+id: io.github.SleepyMario.weightrail
+runtime: org.gnome.Platform
+runtime-version: '50'
+sdk: org.gnome.Sdk
+command: weightrail-gui
+
+finish-args:
+  - --share=ipc
+  - --socket=wayland
+  - --socket=fallback-x11
+
+cleanup:
+  - /bin/f2py
+  - /bin/numpy-config
+  - /lib/python3.13/site-packages/numpy/_core/include
+  - /lib/python3.13/site-packages/numpy/_core/lib/libnpymath.a
+  - /lib/python3.13/site-packages/numpy/_core/lib/pkgconfig
+  - /lib/python3.13/site-packages/numpy/_core/*_tests*
+  - /lib/python3.13/site-packages/numpy/*/tests
+  - /lib/python3.13/site-packages/numpy/random/_examples
+  - /lib/python3.13/site-packages/numpy/random/lib/libnpyrandom.a
+  - /lib/python3.13/site-packages/numpy/tests
+
+modules:
+  - python3-meson-python.json
+  - python3-numpy.json
+  - name: weightrail
+    buildsystem: simple
+    build-commands:
+      - >-
+        pip3 install --verbose --no-index --no-deps --no-build-isolation
+        --no-compile --prefix=/app .
+      - install -Dm644 io.github.SleepyMario.weightrail.desktop /app/share/applications/io.github.SleepyMario.weightrail.desktop
+      - install -Dm644 io.github.SleepyMario.weightrail.metainfo.xml /app/share/metainfo/io.github.SleepyMario.weightrail.metainfo.xml
+      - install -Dm644 io.github.SleepyMario.weightrail.svg /app/share/icons/hicolor/scalable/apps/io.github.SleepyMario.weightrail.svg
+      - install -Dm644 LICENSE /app/share/licenses/io.github.SleepyMario.weightrail/LICENSE
+      - install -Dm644 README.md CHANGELOG.md -t /app/share/doc/weightrail
+      - find /app/lib/python3.13/site-packages -type d -name __pycache__ -prune -exec rm -rf '{}' +
+    sources:
+      - type: archive
+        url: https://github.com/SleepyMario/weightrail/archive/refs/tags/v0.2.0.tar.gz
+        sha256: 68d67f7f7b071ba2ff5dcd63bb4fbaefc5c2aafb0c35a2e9442e0c88812164b9
+      - type: file
+        path: io.github.SleepyMario.weightrail.desktop
+      - type: file
+        path: io.github.SleepyMario.weightrail.metainfo.xml
+      - type: file
+        path: io.github.SleepyMario.weightrail.svg

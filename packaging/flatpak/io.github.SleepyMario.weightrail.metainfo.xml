@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.SleepyMario.weightrail</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+  <name>Weightrail</name>
+  <summary>Local-first weight tracking and trend summaries</summary>
+  <description>
+    <p>
+      Weightrail records daily weight measurements in a private local SQLite
+      database and presents recent entries, statistics, and simple trends.
+    </p>
+    <p>
+      The Flatpak provides a GTK 3 desktop interface and an additional command
+      line interface. It does not require an account or network service.
+    </p>
+  </description>
+  <launchable type="desktop-id">io.github.SleepyMario.weightrail.desktop</launchable>
+  <developer id="io.github.sleepymario">
+    <name>Ashwin</name>
+  </developer>
+  <url type="homepage">https://github.com/SleepyMario/weightrail</url>
+  <url type="vcs-browser">https://github.com/SleepyMario/weightrail</url>
+  <url type="bugtracker">https://github.com/SleepyMario/weightrail/issues</url>
+  <releases>
+    <release version="0.2.0" date="2026-07-13"/>
+  </releases>
+  <content_rating type="oars-1.1"/>
+</component>
