@@ -1,0 +1,22 @@
+pkgbase = weightrail
+	pkgdesc = Local-first SQLite-backed terminal weight tracker
+	pkgver = 0.2.0
+	pkgrel = 1
+	url = https://github.com/SleepyMario/weightrail
+	arch = any
+	license = MIT
+	checkdepends = python-pytest
+	makedepends = python-build
+	makedepends = python-installer
+	makedepends = python-setuptools
+	makedepends = python-wheel
+	depends = python
+	depends = python-numpy
+	depends = sqlite
+	optdepends = python-plotext: terminal graph rendering (AUR)
+	optdepends = python-gobject: GTK GUI Python bindings
+	optdepends = gtk3: GTK 3 GUI toolkit
+	source = weightrail-0.2.0.tar.gz::https://github.com/SleepyMario/weightrail/archive/refs/tags/v0.2.0.tar.gz
+	sha256sums = 68d67f7f7b071ba2ff5dcd63bb4fbaefc5c2aafb0c35a2e9442e0c88812164b9
+
+pkgname = weightrail

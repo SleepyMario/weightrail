@@ -1,0 +1,42 @@
+# Maintainer: Ashwin <ashwin@users.noreply.github.com>
+
+pkgname=weightrail
+pkgver=0.2.0
+pkgrel=1
+pkgdesc="Local-first SQLite-backed terminal weight tracker"
+arch=('any')
+url="https://github.com/SleepyMario/weightrail"
+license=('MIT')
+depends=('python' 'python-numpy' 'sqlite')
+makedepends=('python-build' 'python-installer' 'python-setuptools' 'python-wheel')
+checkdepends=('python-pytest')
+optdepends=(
+  'python-plotext: terminal graph rendering (AUR)'
+  'python-gobject: GTK GUI Python bindings'
+  'gtk3: GTK 3 GUI toolkit'
+)
+source=("${pkgname}-${pkgver}.tar.gz::${url}/archive/refs/tags/v${pkgver}.tar.gz")
+sha256sums=('68d67f7f7b071ba2ff5dcd63bb4fbaefc5c2aafb0c35a2e9442e0c88812164b9')
+
+build() {
+  cd "${pkgname}-${pkgver}"
+  python -m build --wheel --no-isolation
+}
+
+check() {
+  cd "${pkgname}-${pkgver}"
+  export HOME="${srcdir}/test-home"
+  export XDG_CACHE_HOME="${HOME}/.cache"
+  export XDG_CONFIG_HOME="${HOME}/.config"
+  export XDG_DATA_HOME="${HOME}/.local/share"
+  export PYTHONPATH="${PWD}/src"
+  mkdir -p "${XDG_CACHE_HOME}" "${XDG_CONFIG_HOME}" "${XDG_DATA_HOME}"
+  python -m pytest
+}
+
+package() {
+  cd "${pkgname}-${pkgver}"
+  python -m installer --destdir="${pkgdir}" dist/*.whl
+  install -Dm644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+  install -Dm644 README.md CHANGELOG.md -t "${pkgdir}/usr/share/doc/${pkgname}"
+}
