@@ -1,0 +1,10 @@
+/out/
+/*.snap
+/prime/
+/stage/
+/parts/
+/build/
+/.snapcraft/
+/.cache/
+/test-home/
+*.log

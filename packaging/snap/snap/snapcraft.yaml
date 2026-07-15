@@ -1,0 +1,111 @@
+name: weightrail
+version: '0.2.0'
+summary: Local-first weight tracking and trend summaries
+description: |
+  Weightrail records daily weight measurements in a local SQLite database and
+  provides a command-line interface, statistics, trend summaries, and a GTK 3
+  desktop interface.
+license: MIT
+website: https://github.com/SleepyMario/weightrail
+source-code: https://github.com/SleepyMario/weightrail
+issues: https://github.com/SleepyMario/weightrail/issues
+contact: https://github.com/SleepyMario/weightrail/issues
+
+base: core24
+grade: devel
+confinement: strict
+
+platforms:
+  amd64:
+    build-on: [amd64]
+    build-for: [amd64]
+
+apps:
+  weightrail:
+    command: bin/weightrail
+    environment:
+      XDG_DATA_HOME: $SNAP_USER_COMMON/.local/share
+  weightrail-gui:
+    command: bin/weightrail-gui
+    desktop: snap/gui/weightrail.desktop
+    plugs:
+      - desktop
+      - desktop-legacy
+      - wayland
+      - x11
+    environment:
+      XDG_DATA_HOME: $SNAP_USER_COMMON/.local/share
+      XDG_DATA_DIRS: $SNAP/usr/share
+      PYTHONPATH: $SNAP/usr/lib/python3/dist-packages
+      GI_TYPELIB_PATH: $SNAP/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/girepository-1.0
+      LD_LIBRARY_PATH: $SNAP/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR:$SNAP/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR
+
+parts:
+  desktop-assets:
+    plugin: dump
+    source: snap/gui
+    organize:
+      weightrail.desktop: snap/gui/weightrail.desktop
+      weightrail.svg: snap/gui/weightrail.svg
+  desktop-icon:
+    plugin: dump
+    source: snap/gui
+    source-type: local
+    organize:
+      weightrail.svg: usr/share/icons/hicolor/scalable/apps/weightrail.svg
+    prime:
+      - usr/share/icons/hicolor/scalable/apps/weightrail.svg
+  weightrail:
+    plugin: python
+    source: https://github.com/SleepyMario/weightrail/archive/refs/tags/v0.2.0.tar.gz
+    source-checksum: sha256/68d67f7f7b071ba2ff5dcd63bb4fbaefc5c2aafb0c35a2e9442e0c88812164b9
+    python-packages:
+      - numpy==2.5.1
+    stage-packages:
+      - gir1.2-gtk-3.0
+      - libgtk-3-0t64
+      - python3-gi
+    prime:
+      - -bin/Activate.ps1
+      - -bin/activate
+      - -bin/activate.csh
+      - -bin/activate.fish
+      - -bin/f2py
+      - -bin/numpy-config
+      - -bin/pip
+      - -bin/pip3
+      - -bin/pip3.12
+      - -lib/python3.12/site-packages/pip
+      - -lib/python3.12/site-packages/pip-*.dist-info
+      - -lib/python3.12/site-packages/numpy/_core/*_tests*
+      - -lib/python3.12/site-packages/numpy/_core/include
+      - -lib/python3.12/site-packages/numpy/_core/lib/libnpymath.a
+      - -lib/python3.12/site-packages/numpy/f2py
+      - -lib/python3.12/site-packages/numpy/random/_examples
+      - -lib/python3.12/site-packages/numpy/random/lib/libnpyrandom.a
+      - -lib/python3.12/site-packages/numpy/tests
+      - -lib/python3.12/site-packages/numpy/*/tests
+      - -**/__pycache__
+      - -**/*.pyc
+      - -**/*.pxd
+      - -lib/python3.12/site-packages/**/__pycache__
+      - -lib/python3.12/site-packages/**/__pycache__/*
+      - -lib/python3.12/site-packages/**/*.pyc
+      - -lib/python3.12/site-packages/**/*.pxd
+      - -include
+      - -usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libcolordprivate.so*
+      - -usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libicuio.so*
+      - -usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libicutest.so*
+      - -usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libicutu.so*
+  documentation:
+    plugin: dump
+    source: https://github.com/SleepyMario/weightrail/archive/refs/tags/v0.2.0.tar.gz
+    source-checksum: sha256/68d67f7f7b071ba2ff5dcd63bb4fbaefc5c2aafb0c35a2e9442e0c88812164b9
+    organize:
+      LICENSE: usr/share/licenses/weightrail/LICENSE
+      README.md: usr/share/doc/weightrail/README.md
+      CHANGELOG.md: usr/share/doc/weightrail/CHANGELOG.md
+    prime:
+      - usr/share/licenses/weightrail/LICENSE
+      - usr/share/doc/weightrail/README.md
+      - usr/share/doc/weightrail/CHANGELOG.md

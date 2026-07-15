@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <title>Weightrail</title>
+  <rect x="8" y="8" width="112" height="112" rx="25" fill="#245c73"/>
+  <path d="M30 79a34 34 0 0 1 68 0" fill="none" stroke="#e8f3f6" stroke-width="10" stroke-linecap="round"/>
+  <path d="M64 78 82 50" fill="none" stroke="#f3b33d" stroke-width="8" stroke-linecap="round"/>
+  <circle cx="64" cy="78" r="8" fill="#f3b33d" stroke="#173c4b" stroke-width="3"/>
+  <path d="M34 93h60" stroke="#e8f3f6" stroke-width="10" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Weightrail
+Comment=Track weight locally with statistics and trends
+Exec=weightrail.weightrail-gui
+Icon=weightrail
+Terminal=false
+Type=Application
+Categories=Utility;
+StartupNotify=true
