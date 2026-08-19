@@ -13,7 +13,7 @@ It stores measurements in a local SQLite database, prints recorded rows, draws a
 - Terminal chart using optional `plotext`.
 - Basic plain-text statistics.
 - Linear trend summary using NumPy.
-- Optional GTK Linux GUI.
+- Optional GTK Linux GUI with a graphical measurement and trend chart.
 - Alternate database paths with `--db-path`.
 - Local SQLite storage.
 
@@ -57,7 +57,10 @@ For the optional GTK Linux GUI:
 python -m pip install -e ".[gui]"
 ```
 
-On Linux distributions, PyGObject and GTK are often best installed through the system package manager.
+The `gui` extra installs PyGObject and Matplotlib; GTK 3 itself is normally
+installed through the Linux distribution's package manager. CLI-only installs
+do not pull in Matplotlib. If the GUI dependencies are absent,
+`weightrail-gui` reports the missing requirement and exits cleanly.
 
 ### pipx
 
@@ -80,12 +83,15 @@ it is not published in the Ubuntu or Debian archives. Build it with normal
 Debian tooling, then install the resulting artifact:
 
 ```bash
-sudo apt install ./weightrail_0.2.0-1_all.deb
+sudo apt install ./weightrail_0.2.0-1_all.deb \
+  ./weightrail-gui_0.2.0-1_all.deb
 ```
 
-The package installs `/usr/bin/weightrail`. Upgrading the package does not
-change existing records. Removing or purging the package does not delete user
-data, which remains at `~/.local/share/weightrail/weights.sqlite` by default.
+The base package installs `/usr/bin/weightrail`. Install the separate
+`weightrail-gui` package for the GTK launcher and its GTK/Matplotlib
+dependencies. Upgrading either package does not change existing records.
+Removing or purging the packages does not delete user data, which remains at
+`~/.local/share/weightrail/weights.sqlite` by default.
 
 This package is currently intended for local validation and distribution; it
 does not imply archive inclusion. Ubuntu 26.04 does not package `plotext`, so
@@ -136,7 +142,10 @@ gentoo/app-misc/weightrail/weightrail-0.2.0.ebuild
 Current Gentoo status:
 
 - The ebuild is prepared for `app-misc/weightrail`.
-- It depends on `dev-python/numpy` and `dev-python/plotext`.
+- It always depends on `dev-python/numpy`.
+- Its default-enabled `graph` USE flag installs `dev-python/plotext`.
+- Its optional `gui` USE flag installs GTK 3, PyGObject, and
+  `dev-python/matplotlib[gtk3]`.
 - On this machine, `dev-python/plotext` is available through Guru.
 - Systems without Guru may need Guru enabled or a local `plotext` ebuild.
 - The versioned ebuild uses the GitHub v0.2.0 tag archive.
@@ -176,6 +185,11 @@ Launch the small GTK frontend:
 ```bash
 weightrail-gui
 ```
+
+The GUI displays the same statistics and recent entries as the CLI-backed
+database, plus a graphical history chart. Measurements use their actual dates
+on the x-axis, and two or more measurements add a dashed linear trend line.
+The chart refreshes after every record or same-day replacement.
 
 The CLI and GUI use the same SQLite database by default. The GUI also accepts an alternate database path:
 

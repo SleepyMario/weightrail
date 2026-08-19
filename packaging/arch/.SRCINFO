@@ -16,6 +16,7 @@ pkgbase = weightrail
 	optdepends = python-plotext: terminal graph rendering (AUR)
 	optdepends = python-gobject: GTK GUI Python bindings
 	optdepends = gtk3: GTK 3 GUI toolkit
+	optdepends = python-matplotlib: graphical weight chart in the GTK GUI
 	source = weightrail-0.2.0.tar.gz::https://github.com/SleepyMario/weightrail/archive/refs/tags/v0.2.0.tar.gz
 	sha256sums = 68d67f7f7b071ba2ff5dcd63bb4fbaefc5c2aafb0c35a2e9442e0c88812164b9
 

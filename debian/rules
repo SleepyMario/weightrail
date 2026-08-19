@@ -11,11 +11,4 @@ override_dh_auto_test:
 
 override_dh_auto_install:
 	dh_auto_install
-	rm -f debian/weightrail/usr/bin/weightrail-gui \
-		debian/weightrail/usr/lib/python3*/dist-packages/weightrail/gui.py \
-		debian/weightrail/usr/lib/python3*/dist-packages/weightrail/__pycache__/gui.*.pyc
-	sed -i '/^weightrail-gui = /d' \
-		debian/weightrail/usr/lib/python3*/dist-packages/weightrail-*.dist-info/entry_points.txt
-	sed -i '/weightrail\/gui\.py/d; /weightrail\/__pycache__\/gui\./d' \
-		debian/weightrail/usr/lib/python3*/dist-packages/weightrail-*.dist-info/RECORD
-	find debian/weightrail -type d -name .pytest_cache -prune -exec rm -rf {} +
+	find debian/tmp -type d -name .pytest_cache -prune -exec rm -rf {} +

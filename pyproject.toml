@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "weightrail"
 version = "0.2.0"
-description = "Local-first SQLite-backed terminal weight tracker."
+description = "Local-first SQLite-backed weight tracker with CLI and optional GTK GUI."
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
@@ -13,10 +13,11 @@ license-files = ["LICENSE"]
 authors = [
   { name = "Ashwin" }
 ]
-keywords = ["cli", "sqlite", "weight", "tracker", "terminal"]
+keywords = ["cli", "gtk", "sqlite", "weight", "tracker", "terminal"]
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Environment :: Console",
+  "Environment :: X11 Applications :: GTK",
   "Intended Audience :: End Users/Desktop",
   "Operating System :: OS Independent",
   "Programming Language :: Python :: 3",
@@ -36,7 +37,8 @@ graph = [
   "plotext"
 ]
 gui = [
-  "PyGObject"
+  "PyGObject",
+  "matplotlib"
 ]
 dev = [
   "build",

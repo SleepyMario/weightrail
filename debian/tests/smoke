@@ -9,6 +9,7 @@ db="$XDG_DATA_HOME/weightrail/weights.sqlite"
 
 weightrail --help >/dev/null
 weightrail --version >/dev/null
+weightrail-gui --help >/dev/null
 weightrail --db-path "$db" 72.5 >/dev/null
 weightrail --db-path "$db" stats | grep -q 'Entries: 1'
 weightrail --db-path "$db" --show >/dev/null

@@ -8,4 +8,10 @@
   <upstream>
     <remote-id type="github">SleepyMario/weightrail</remote-id>
   </upstream>
+  <use>
+    <flag name="graph">Install plotext for terminal graph rendering</flag>
+    <flag name="gui">
+      Install GTK 3, PyGObject, and Matplotlib for the graphical interface
+    </flag>
+  </use>
 </pkgmetadata>

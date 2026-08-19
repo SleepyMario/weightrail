@@ -35,8 +35,9 @@ the immutable v0.2.0 GitHub archive and verifies SHA-256
 
 ## Dependencies and desktop integration
 
-The Python plugin installs Weightrail and pins NumPy to 2.5.1. GTK 3 and
-PyGObject come from the Ubuntu core24 packages `libgtk-3-0t64`,
+The Python plugin installs Weightrail, pins NumPy to 2.5.1, and installs
+Matplotlib 3.10.5 for the embedded history chart. GTK 3 and PyGObject come
+from the Ubuntu core24 packages `libgtk-3-0t64`,
 `gir1.2-gtk-3.0`, and `python3-gi`. Plotext is intentionally omitted; the CLI
 prints its normal optional-graph message.
 

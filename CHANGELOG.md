@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- Add an expanding Matplotlib weight-history chart to the GTK 3 GUI, including
+  an empty state, real calendar spacing, measurement markers, and a linear
+  trend line.
+- Keep Matplotlib optional for CLI-only installations and update GUI-enabled
+  distribution packaging.
+
 ## 0.2.0 - 2026-07-13
 
 - Rename the project, distribution, import package, and command to Weightrail.

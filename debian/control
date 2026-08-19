@@ -19,7 +19,21 @@ Architecture: all
 Depends: ${misc:Depends},
          ${python3:Depends},
          python3-numpy
-Description: local-first terminal weight tracker
+Suggests: weightrail-gui
+Description: local-first weight tracker command-line interface
  Weightrail records daily weights in a per-user SQLite database, displays
  records, and provides statistical and trend summaries. It does not require a
  network service or a system daemon.
+
+Package: weightrail-gui
+Architecture: all
+Depends: ${misc:Depends},
+         ${python3:Depends},
+         weightrail (= ${binary:Version}),
+         gir1.2-gtk-3.0,
+         python3-gi,
+         python3-gi-cairo,
+         python3-matplotlib
+Description: local-first weight tracker GTK interface
+ Weightrail records daily weights in a per-user SQLite database. This package
+ adds its GTK 3 interface, including a Matplotlib history and trend chart.

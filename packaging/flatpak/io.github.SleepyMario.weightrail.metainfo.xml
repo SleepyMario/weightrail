@@ -8,7 +8,8 @@
   <description>
     <p>
       Weightrail records daily weight measurements in a private local SQLite
-      database and presents recent entries, statistics, and simple trends.
+      database and presents recent entries, statistics, and a graphical weight
+      history with a linear trend.
     </p>
     <p>
       The Flatpak provides a GTK 3 desktop interface and an additional command

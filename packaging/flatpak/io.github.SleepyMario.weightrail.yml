@@ -20,10 +20,14 @@ cleanup:
   - /lib/python3.13/site-packages/numpy/random/_examples
   - /lib/python3.13/site-packages/numpy/random/lib/libnpyrandom.a
   - /lib/python3.13/site-packages/numpy/tests
+  - /lib/python3.13/site-packages/matplotlib/tests
+  - /lib/python3.13/site-packages/mpl_toolkits/**/tests
 
 modules:
   - python3-meson-python.json
+  - python3-matplotlib-build-dependencies.json
   - python3-numpy.json
+  - python3-matplotlib.json
   - name: weightrail
     buildsystem: simple
     build-commands:

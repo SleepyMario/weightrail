@@ -12,9 +12,10 @@ CLI as `weightrail`.
 The manifest targets `org.gnome.Platform` and `org.gnome.Sdk` branch 50. In the
 validated Flathub environment, branch 50 was the newest stable GNOME branch,
 while branch 48 was explicitly marked end-of-life. The runtime supplies Python
-3.13, GTK 3, and PyGObject. It does not supply NumPy, so checksum-pinned NumPy
-2.5.1 is built from source with pinned meson-python build support. Build-only
-Python tooling is removed from the final application.
+3.13, GTK 3, and PyGObject. It does not supply NumPy or Matplotlib, so
+checksum-pinned NumPy 2.5.1 and Matplotlib 3.10.5 (with its Python
+dependencies) are built from source with pinned meson-python build support.
+Build-only Python tooling is removed from the final application.
 
 The optional `plotext` dependency is not bundled. CLI operations that would
 draw a graph report the upstream availability message; statistics and trend

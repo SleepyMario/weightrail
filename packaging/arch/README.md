@@ -9,7 +9,8 @@ The package builds the tagged GitHub source archive with the standard PEP 517
 setuptools workflow. The installed base command needs Python, NumPy, and
 SQLite. Terminal graphs remain optional because `python-plotext` is currently
 an AUR rather than an official-repository package. The GTK launcher is
-installed and needs both `python-gobject` and `gtk3` at runtime.
+installed and needs `python-gobject`, `gtk3`, and `python-matplotlib` at
+runtime.
 
 Both `weightrail` and `weightrail-gui` are installed below `/usr/bin`; the
 Python package is installed in the system site-packages directory. The package
@@ -67,8 +68,8 @@ pacman -Rns --noconfirm weightrail
 ```
 
 No display server is required for package validation. `weightrail-gui --help`
-validates the launcher without importing GTK; normal GUI use requires the two
-GUI optional dependencies listed above.
+validates the launcher without importing GTK; normal GUI use requires the
+three GUI optional dependencies listed above.
 
 ## Validation status
 
@@ -89,9 +90,9 @@ follows:
 
 - The two `weightrail.*.main` module warnings are false positives for entry
   points whose target modules are present in the same package.
-- The `gi`, `gi.repository.Gtk`, and `plotext` warnings describe imports that
-  are deliberately covered by optional dependencies; the base CLI works
-  without them.
+- The `gi`, `gi.repository.Gtk`, `matplotlib`, and `plotext` warnings describe
+  imports that are deliberately covered by optional dependencies; the base
+  CLI works without them.
 - The `python` library warning is a false positive because `python` is an
   explicit runtime dependency.
 - The apparently unneeded `sqlite` dependency is retained because Arch lists

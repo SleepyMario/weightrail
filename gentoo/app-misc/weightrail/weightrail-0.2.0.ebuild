@@ -16,10 +16,16 @@ S="${WORKDIR}/${P}"
 LICENSE="MIT"
 SLOT="0"
 KEYWORDS="~amd64"
+IUSE="+graph gui"
 
 RDEPEND="
 	dev-python/numpy[${PYTHON_USEDEP}]
-	dev-python/plotext[${PYTHON_USEDEP}]
+	graph? ( dev-python/plotext[${PYTHON_USEDEP}] )
+	gui? (
+		dev-python/matplotlib[gtk3,${PYTHON_USEDEP}]
+		dev-python/pygobject:3[${PYTHON_USEDEP}]
+		x11-libs/gtk+:3[introspection]
+	)
 "
 DEPEND="${RDEPEND}"
 BDEPEND="

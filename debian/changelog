@@ -1,5 +1,6 @@
 weightrail (0.2.0-1) UNRELEASED; urgency=medium
 
   * Complete the canonical Weightrail naming migration.
+  * Add a separate GTK package with a Matplotlib weight-history chart.
 
  -- Ashwin <ashwin@users.noreply.github.com>  Sat, 11 Jul 2026 12:00:00 +0800

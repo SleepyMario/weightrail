@@ -16,10 +16,27 @@ from .db import (
     parse_weight,
     upsert_weight,
 )
+from .gui_chart import WeightChart
 from .stats import WeightStats, calculate_stats, format_optional_change, format_optional_weight
 
 
 RECENT_ENTRY_LIMIT = 10
+
+
+def load_gtk():
+    import gi
+
+    gi.require_version("Gtk", "3.0")
+    from gi.repository import Gtk
+
+    return Gtk
+
+
+def load_chart_backend():
+    from matplotlib.backends.backend_gtk3agg import FigureCanvasGTK3Agg
+    from matplotlib.figure import Figure
+
+    return Figure, FigureCanvasGTK3Agg
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -28,14 +45,23 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     try:
-        import gi
-
-        gi.require_version("Gtk", "3.0")
-        from gi.repository import Gtk
+        Gtk = load_gtk()
     except (ImportError, ValueError) as exc:
         print(
             "Error: GTK support requires PyGObject and GTK 3. "
             "Install the optional GUI dependencies for this package.",
+            file=sys.stderr,
+        )
+        print(f"Details: {exc}", file=sys.stderr)
+        return 1
+
+    try:
+        Figure, FigureCanvasGTK3Agg = load_chart_backend()
+    except (ImportError, RuntimeError, ValueError) as exc:
+        print(
+            "Error: the Weightrail GUI requires Matplotlib with GTK 3 support. "
+            "Install 'weightrail[gui]' with pip, or install your distribution's "
+            "Matplotlib GTK 3 package.",
             file=sys.stderr,
         )
         print(f"Details: {exc}", file=sys.stderr)
@@ -53,7 +79,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(f"Error: {exc}", file=sys.stderr)
         return 1
 
-    window = WeightrailWindow(Gtk, db_path)
+    window = WeightrailWindow(Gtk, db_path, Figure, FigureCanvasGTK3Agg)
     window.connect("destroy", Gtk.main_quit)
     window.show_all()
     Gtk.main()
@@ -61,12 +87,12 @@ def main(argv: Sequence[str] | None = None) -> int:
 
 
 class WeightrailWindow:
-    def __init__(self, Gtk, db_path: Path):
+    def __init__(self, Gtk, db_path: Path, Figure, FigureCanvasGTK3Agg):
         self.Gtk = Gtk
         self.db_path = db_path
         self.window = Gtk.Window(title="Weightrail")
         self.window.set_border_width(16)
-        self.window.set_default_size(620, 520)
+        self.window.set_default_size(820, 900)
 
         root = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=14)
         self.window.add(root)
@@ -96,6 +122,11 @@ class WeightrailWindow:
         root.pack_start(stats_frame, False, False, 0)
         self.stats_grid = Gtk.Grid(column_spacing=18, row_spacing=6, margin=10)
         stats_frame.add(self.stats_grid)
+
+        graph_frame = Gtk.Frame(label="Weight graph")
+        root.pack_start(graph_frame, True, True, 0)
+        self.weight_chart = WeightChart(Figure, FigureCanvasGTK3Agg)
+        graph_frame.add(self.weight_chart.canvas)
 
         recent_frame = Gtk.Frame(label="Recent entries")
         root.pack_start(recent_frame, True, True, 0)
@@ -134,6 +165,7 @@ class WeightrailWindow:
             entries = []
 
         self.refresh_stats(calculate_stats(entries))
+        self.weight_chart.refresh(entries)
         self.refresh_recent(entries)
         if not entries and not self.status_label.get_text():
             self.status_label.set_text("No measurements yet. Enter today's weight to begin.")

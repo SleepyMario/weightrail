@@ -61,6 +61,7 @@ parts:
     source-checksum: sha256/68d67f7f7b071ba2ff5dcd63bb4fbaefc5c2aafb0c35a2e9442e0c88812164b9
     python-packages:
       - numpy==2.5.1
+      - matplotlib==3.10.5
     stage-packages:
       - gir1.2-gtk-3.0
       - libgtk-3-0t64

@@ -14,6 +14,7 @@ optdepends=(
   'python-plotext: terminal graph rendering (AUR)'
   'python-gobject: GTK GUI Python bindings'
   'gtk3: GTK 3 GUI toolkit'
+  'python-matplotlib: graphical weight chart in the GTK GUI'
 )
 source=("${pkgname}-${pkgver}.tar.gz::${url}/archive/refs/tags/v${pkgver}.tar.gz")
 sha256sums=('68d67f7f7b071ba2ff5dcd63bb4fbaefc5c2aafb0c35a2e9442e0c88812164b9')

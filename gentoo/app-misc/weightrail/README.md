@@ -20,6 +20,14 @@ environment before using the ebuild in a real overlay.
 Dependencies:
 
 - `dev-python/numpy`
-- `dev-python/plotext`
+- `dev-python/plotext` with the default-enabled `graph` USE flag
+- `dev-python/matplotlib[gtk3]`, `dev-python/pygobject`, and GTK 3 with the
+  optional `gui` USE flag
 
 On this machine, `dev-python/plotext` is available from Guru. Systems without Guru may need Guru enabled or a local `dev-python/plotext` ebuild.
+
+Enable the graphical application with:
+
+```text
+app-misc/weightrail gui
+```
