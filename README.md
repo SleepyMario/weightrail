@@ -196,6 +196,9 @@ weightrail-gui
 The GUI displays the same statistics and recent entries as the CLI-backed
 database, plus a graphical history chart. Measurements use their actual dates
 on the x-axis, and two or more measurements add a dashed linear trend line.
+Its GTK-native, single-column interface uses a compact header, touch-friendly
+entry controls, theme-aware summary cards, a prominent graph, and a quieter
+recent-entry list.
 Both graphical and terminal charts also show conservative smoothed weekly and
 monthly trends. Each trend remains hidden until its second represented period
 reaches its final day, then appears retroactively from the first represented

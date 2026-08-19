@@ -4,7 +4,7 @@ from datetime import date
 import pytest
 
 from weightrail import gui
-from weightrail.db import WeightEntry
+from weightrail.db import WeightEntry, connect, list_weights
 from weightrail.gui_chart import (
     ALL_SERIES,
     LINEAR_TREND,
@@ -18,6 +18,32 @@ from weightrail.gui_chart import (
 
 def test_gui_module_imports_without_loading_gtk():
     assert gui.RECENT_ENTRY_LIMIT == 10
+
+
+def test_packaged_stylesheet_is_registered():
+    calls = []
+
+    class Provider:
+        def load_from_data(self, css):
+            calls.append(("css", css))
+
+    class FakeStyleContext:
+        @staticmethod
+        def add_provider_for_screen(screen, provider, priority):
+            calls.append(("provider", screen, provider, priority))
+
+    class Gtk:
+        STYLE_PROVIDER_PRIORITY_APPLICATION = 600
+        CssProvider = Provider
+        StyleContext = FakeStyleContext
+
+    screen = object()
+    provider = gui.install_stylesheet(Gtk, screen)
+
+    css = next(value for name, value in calls if name == "css")
+    assert b".card" in css
+    assert b"button.primary-action" in css
+    assert ("provider", screen, provider, 600) in calls
 
 
 def test_gui_help_does_not_require_display(capsys):
@@ -166,6 +192,66 @@ def test_refresh_reuses_one_loaded_entry_list(monkeypatch, tmp_path):
     assert chart_entries is entries
     assert recent_entries is entries
     assert stats[1] is entries
+
+
+def test_record_flow_still_updates_today_and_refreshes(monkeypatch, tmp_path):
+    db_path = tmp_path / "weights.sqlite"
+    refreshed = []
+
+    class Entry:
+        def __init__(self):
+            self.text = "121.5"
+
+        def get_text(self):
+            return self.text
+
+        def set_text(self, value):
+            self.text = value
+
+    class StatusLabel:
+        def set_text(self, value):
+            self.text = value
+
+    window = type("Window", (), {})()
+    window.db_path = db_path
+    window.weight_entry = Entry()
+    window.status_label = StatusLabel()
+    window.refresh = lambda: refreshed.append(True)
+    monkeypatch.setattr(gui, "taipei_today", lambda: date(2026, 8, 19))
+
+    gui.WeightrailWindow.on_record_clicked(window)
+
+    with connect(db_path) as connection:
+        entries = list_weights(connection)
+    assert entries == [WeightEntry("2026-08-19", 121.5)]
+    assert window.weight_entry.text == ""
+    assert window.status_label.text == "Recorded 121.5 kg for 2026-08-19."
+    assert refreshed == [True]
+
+
+def test_recent_entries_remain_latest_first_and_limited():
+    calls = []
+
+    class Store:
+        def clear(self):
+            calls.append(("clear",))
+
+        def append(self, row):
+            calls.append(("append", row))
+
+    window = type("Window", (), {})()
+    window.recent_store = Store()
+    entries = [
+        WeightEntry(f"2026-08-{day:02d}", 100.0 + day)
+        for day in range(1, 13)
+    ]
+
+    gui.WeightrailWindow.refresh_recent(window, entries)
+
+    rows = [call[1] for call in calls if call[0] == "append"]
+    assert len(rows) == gui.RECENT_ENTRY_LIMIT
+    assert rows[0] == ["2026-08-12", "112.0"]
+    assert rows[-1] == ["2026-08-03", "103.0"]
 
 
 def test_line_visibility_defaults_and_unavailable_controls():

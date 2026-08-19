@@ -93,9 +93,10 @@ class WeightChart:
     """Small Matplotlib-backed GTK chart component."""
 
     def __init__(self, Figure, FigureCanvasGTK3Agg):
-        self.figure = Figure(figsize=(7, 3), dpi=100)
+        self.figure = Figure(figsize=(7, 3.6), dpi=100)
         self.axes = self.figure.add_subplot(111)
         self.canvas = FigureCanvasGTK3Agg(self.figure)
+        self.canvas.set_size_request(320, 320)
         self.canvas.set_hexpand(True)
         self.canvas.set_vexpand(True)
 
@@ -198,7 +199,7 @@ class WeightChart:
         if len(plotted_series) > 1 or any(
             series != MEASUREMENTS for series in plotted_series
         ):
-            self.axes.legend(ncol=2)
+            self.axes.legend(ncol=2, frameon=False)
 
         locator = mdates.AutoDateLocator(minticks=3, maxticks=8)
         self.axes.xaxis.set_major_locator(locator)

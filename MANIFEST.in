@@ -8,6 +8,7 @@ recursive-include gentoo *
 recursive-include tests *.py
 recursive-include .github *.yml
 recursive-include scripts *.sh
+recursive-include src/weightrail *.css
 global-exclude __pycache__/*
 global-exclude *.py[cod]
 global-exclude *.sqlite

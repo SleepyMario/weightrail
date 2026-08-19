@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import sys
 from collections.abc import Sequence
+from importlib import resources
 from pathlib import Path
 
 from .dates import taipei_today
@@ -27,6 +28,24 @@ from .stats import WeightStats, calculate_stats, format_optional_change, format_
 
 
 RECENT_ENTRY_LIMIT = 10
+
+
+def add_style_classes(widget, *class_names: str) -> None:
+    context = widget.get_style_context()
+    for class_name in class_names:
+        context.add_class(class_name)
+
+
+def install_stylesheet(Gtk, screen):
+    provider = Gtk.CssProvider()
+    css = resources.files("weightrail").joinpath("gui.css").read_bytes()
+    provider.load_from_data(css)
+    Gtk.StyleContext.add_provider_for_screen(
+        screen,
+        provider,
+        Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION,
+    )
+    return provider
 
 
 def load_gtk():
@@ -128,77 +147,155 @@ class WeightrailWindow:
         self.Gtk = Gtk
         self.db_path = db_path
         self.window = Gtk.Window(title="Weightrail")
-        self.window.set_border_width(16)
-        self.window.set_default_size(820, 900)
+        self.window.set_default_size(840, 880)
+        self.window.set_size_request(420, 560)
+        add_style_classes(self.window, "weightrail-window")
+        self.css_provider = install_stylesheet(Gtk, self.window.get_screen())
 
-        root = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=14)
-        self.window.add(root)
+        header = Gtk.HeaderBar()
+        header.set_title("Weightrail")
+        header.set_subtitle("Weight tracking, kept simple")
+        header.set_show_close_button(True)
+        add_style_classes(header, "app-header")
+        self.window.set_titlebar(header)
 
-        title = Gtk.Label()
-        title.set_markup("<b>Weightrail</b>")
-        title.set_xalign(0)
-        root.pack_start(title, False, False, 0)
+        page = Gtk.ScrolledWindow()
+        page.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        page.set_shadow_type(Gtk.ShadowType.NONE)
+        self.window.add(page)
 
-        entry_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
-        root.pack_start(entry_row, False, False, 0)
+        root = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=16)
+        root.set_margin_top(20)
+        root.set_margin_bottom(20)
+        root.set_margin_start(20)
+        root.set_margin_end(20)
+        add_style_classes(root, "weightrail-content")
+        page.add(root)
+
+        entry_card = self.create_card(
+            "Today's weight",
+            "Record or update today's measurement.",
+        )
+        root.pack_start(entry_card, False, False, 0)
+
+        entry_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        entry_card.pack_start(entry_row, False, False, 0)
 
         self.weight_entry = Gtk.Entry()
         self.weight_entry.set_placeholder_text("Weight in kg")
+        self.weight_entry.set_input_purpose(Gtk.InputPurpose.NUMBER)
         self.weight_entry.connect("activate", self.on_record_clicked)
+        add_style_classes(self.weight_entry, "weight-entry")
         entry_row.pack_start(self.weight_entry, True, True, 0)
 
-        record_button = Gtk.Button(label="Record today")
-        record_button.connect("clicked", self.on_record_clicked)
-        entry_row.pack_start(record_button, False, False, 0)
+        self.record_button = Gtk.Button(label="Record today")
+        self.record_button.connect("clicked", self.on_record_clicked)
+        add_style_classes(self.record_button, "suggested-action", "primary-action")
+        entry_row.pack_start(self.record_button, False, False, 0)
 
         self.status_label = Gtk.Label()
         self.status_label.set_xalign(0)
-        root.pack_start(self.status_label, False, False, 0)
+        self.status_label.set_line_wrap(True)
+        add_style_classes(self.status_label, "status-label")
+        entry_card.pack_start(self.status_label, False, False, 0)
 
-        stats_frame = Gtk.Frame(label="Stats")
-        root.pack_start(stats_frame, False, False, 0)
-        self.stats_grid = Gtk.Grid(column_spacing=18, row_spacing=6, margin=10)
-        stats_frame.add(self.stats_grid)
+        stats_card = self.create_card("At a glance")
+        root.pack_start(stats_card, False, False, 0)
+        self.stats_grid = Gtk.Grid(column_spacing=28, row_spacing=10)
+        self.stats_grid.set_hexpand(True)
+        add_style_classes(self.stats_grid, "stats-grid")
+        stats_card.pack_start(self.stats_grid, False, False, 0)
 
-        graph_frame = Gtk.Frame(label="Weight graph")
-        root.pack_start(graph_frame, True, True, 0)
-        graph_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
-        graph_frame.add(graph_box)
+        graph_card = self.create_card(
+            "Weight history",
+            "Measurements and trends over time.",
+            "graph-card",
+        )
+        root.pack_start(graph_card, True, True, 0)
 
         self.line_visibility = LineVisibilityState()
         self.line_controls = {}
         self._syncing_line_controls = False
-        lines_expander = Gtk.Expander(label="Lines")
-        graph_box.pack_start(lines_expander, False, False, 0)
-        lines_box = Gtk.Box(
-            orientation=Gtk.Orientation.HORIZONTAL,
-            spacing=10,
-            margin=6,
-        )
-        lines_expander.add(lines_box)
+
+        self.weight_chart = WeightChart(Figure, FigureCanvasGTK3Agg)
+        add_style_classes(self.weight_chart.canvas, "chart-canvas")
+        graph_card.pack_start(self.weight_chart.canvas, True, True, 0)
+
+        self.lines_expander = Gtk.Expander(label="Lines")
+        self.lines_expander.set_expanded(False)
+        add_style_classes(self.lines_expander, "lines-expander")
+        graph_card.pack_start(self.lines_expander, False, False, 0)
+        lines_box = Gtk.FlowBox()
+        lines_box.set_selection_mode(Gtk.SelectionMode.NONE)
+        lines_box.set_row_spacing(4)
+        lines_box.set_column_spacing(12)
+        lines_box.set_min_children_per_line(1)
+        lines_box.set_max_children_per_line(4)
+        lines_box.set_margin_top(4)
+        lines_box.set_margin_bottom(2)
+        self.lines_expander.add(lines_box)
         for series in ALL_SERIES:
             control = Gtk.CheckButton(label=SERIES_LABELS[series])
             control.connect("toggled", self.on_line_toggled, series)
-            lines_box.pack_start(control, False, False, 0)
+            add_style_classes(control, "line-toggle")
+            lines_box.add(control)
             self.line_controls[series] = control
 
-        self.weight_chart = WeightChart(Figure, FigureCanvasGTK3Agg)
-        graph_box.pack_start(self.weight_chart.canvas, True, True, 0)
-
-        recent_frame = Gtk.Frame(label="Recent entries")
-        root.pack_start(recent_frame, True, True, 0)
+        recent_card = self.create_card(
+            "Recent entries",
+            "Your latest measurements.",
+            "recent-card",
+        )
+        root.pack_start(recent_card, False, False, 0)
         self.recent_store = Gtk.ListStore(str, str)
-        recent_view = Gtk.TreeView(model=self.recent_store)
+        self.recent_view = Gtk.TreeView(model=self.recent_store)
+        self.recent_view.set_headers_visible(True)
+        add_style_classes(self.recent_view, "recent-table")
         for index, title_text in enumerate(("Date", "Weight kg")):
             renderer = Gtk.CellRendererText()
+            if index == 1:
+                renderer.set_property("xalign", 1.0)
             column = Gtk.TreeViewColumn(title_text, renderer, text=index)
-            recent_view.append_column(column)
-        recent_frame.add(recent_view)
+            column.set_expand(index == 0)
+            self.recent_view.append_column(column)
+
+        recent_scroll = Gtk.ScrolledWindow()
+        recent_scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        recent_scroll.set_shadow_type(Gtk.ShadowType.NONE)
+        recent_scroll.set_min_content_height(150)
+        recent_scroll.set_max_content_height(210)
+        recent_scroll.set_propagate_natural_height(True)
+        add_style_classes(recent_scroll, "recent-scroll")
+        recent_scroll.add(self.recent_view)
+        recent_card.pack_start(recent_scroll, False, False, 0)
 
         self.refresh()
 
     def __getattr__(self, name: str):
         return getattr(self.window, name)
+
+    def create_card(
+        self,
+        title_text: str,
+        subtitle_text: str | None = None,
+        *extra_classes: str,
+    ):
+        card = self.Gtk.Box(orientation=self.Gtk.Orientation.VERTICAL, spacing=10)
+        add_style_classes(card, "card", *extra_classes)
+
+        heading = self.Gtk.Label(label=title_text)
+        heading.set_xalign(0)
+        add_style_classes(heading, "section-title")
+        card.pack_start(heading, False, False, 0)
+
+        if subtitle_text is not None:
+            subtitle = self.Gtk.Label(label=subtitle_text)
+            subtitle.set_xalign(0)
+            subtitle.set_line_wrap(True)
+            add_style_classes(subtitle, "section-subtitle")
+            card.pack_start(subtitle, False, False, 0)
+
+        return card
 
     def on_record_clicked(self, *_args) -> None:
         raw_weight = self.weight_entry.get_text().strip()
@@ -283,7 +380,14 @@ class WeightrailWindow:
         label = self.Gtk.Label(label=label_text)
         label.set_xalign(0)
         value = self.Gtk.Label(label=value_text)
-        value.set_xalign(0)
+        value.set_xalign(1)
+        value.set_hexpand(True)
+        if label_text == "Latest":
+            add_style_classes(label, "primary-stat-label")
+            add_style_classes(value, "primary-stat-value")
+        else:
+            add_style_classes(label, "stat-label")
+            add_style_classes(value, "stat-value")
         self.stats_grid.attach(label, 0, row, 1, 1)
         self.stats_grid.attach(value, 1, row, 1, 1)
 

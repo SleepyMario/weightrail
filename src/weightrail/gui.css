@@ -1,0 +1,125 @@
+.weightrail-window,
+.weightrail-content {
+  background-color: @theme_bg_color;
+  color: @theme_fg_color;
+}
+
+headerbar.app-header {
+  min-height: 48px;
+  padding: 4px 10px;
+}
+
+headerbar.app-header .title {
+  font-weight: 700;
+}
+
+.card {
+  background-color: @theme_base_color;
+  border: 1px solid alpha(@theme_fg_color, 0.12);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.graph-card {
+  padding-bottom: 12px;
+}
+
+.section-title {
+  color: @theme_fg_color;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.section-subtitle,
+.status-label,
+.stat-label {
+  color: alpha(@theme_fg_color, 0.65);
+}
+
+.section-subtitle,
+.status-label {
+  font-size: 12px;
+}
+
+entry.weight-entry {
+  min-height: 42px;
+  padding: 2px 12px;
+  border-radius: 8px;
+  font-size: 16px;
+}
+
+button.primary-action {
+  min-width: 132px;
+  min-height: 42px;
+  padding: 2px 16px;
+  border-color: @theme_selected_bg_color;
+  border-radius: 8px;
+  background-color: @theme_selected_bg_color;
+  background-image: none;
+  color: @theme_selected_fg_color;
+  font-weight: 700;
+}
+
+button.primary-action:hover {
+  background-color: shade(@theme_selected_bg_color, 1.08);
+}
+
+button.primary-action:active {
+  background-color: shade(@theme_selected_bg_color, 0.92);
+}
+
+.stats-grid {
+  padding-top: 2px;
+}
+
+.stat-label {
+  font-size: 12px;
+}
+
+.stat-value {
+  color: @theme_fg_color;
+  font-weight: 600;
+}
+
+.primary-stat-label {
+  color: alpha(@theme_fg_color, 0.72);
+  font-weight: 600;
+}
+
+.primary-stat-value {
+  color: @theme_fg_color;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.lines-expander {
+  margin-top: 6px;
+  padding-top: 8px;
+  border-top: 1px solid alpha(@theme_fg_color, 0.10);
+}
+
+.lines-expander > title {
+  min-height: 34px;
+  color: alpha(@theme_fg_color, 0.78);
+  font-weight: 600;
+}
+
+checkbutton.line-toggle {
+  min-height: 34px;
+  padding: 2px 4px;
+}
+
+scrolledwindow.recent-scroll {
+  border: 0;
+}
+
+treeview.recent-table {
+  background-color: @theme_base_color;
+}
+
+treeview.recent-table header button {
+  min-height: 30px;
+  background-color: alpha(@theme_fg_color, 0.04);
+  background-image: none;
+  font-weight: 600;
+}

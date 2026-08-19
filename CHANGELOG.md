@@ -12,6 +12,8 @@
   complete, then draw it retroactively from the first represented period.
 - Recognize `weightrail graph` as a graph-only CLI command, exit the GTK main
   loop cleanly on Ctrl+C, and add session-only GUI line visibility controls.
+- Modernize the GTK interface with a native header, theme-aware card styling,
+  touch-friendly controls, a more prominent graph, and quieter recent entries.
 
 ## 0.2.0 - 2026-07-13
 

@@ -136,7 +136,7 @@ def test_weight_chart_renders_distinct_weekly_and_monthly_series(monkeypatch):
             scatter_calls.append((dates, weights, kwargs))
 
         def legend(self, **kwargs):
-            assert kwargs == {"ncol": 2}
+            assert kwargs == {"ncol": 2, "frameon": False}
             legend_labels.append(
                 tuple(call[2]["label"] for call in plot_calls)
             )
