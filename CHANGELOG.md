@@ -10,6 +10,8 @@
 - Add shared, shape-preserving ISO-weekly and monthly-mean trends to the
   terminal and GTK charts. Delay each until its second represented period is
   complete, then draw it retroactively from the first represented period.
+- Recognize `weightrail graph` as a graph-only CLI command, exit the GTK main
+  loop cleanly on Ctrl+C, and add session-only GUI line visibility controls.
 
 ## 0.2.0 - 2026-07-13
 

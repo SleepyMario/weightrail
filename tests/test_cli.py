@@ -38,6 +38,70 @@ def test_stats_command_with_no_data_is_clear(tmp_path, capsys):
     assert captured.err == ""
 
 
+def test_graph_command_is_not_sent_to_weight_parser(
+    tmp_path, monkeypatch, capsys
+):
+    rendered_entries = []
+
+    def reject_weight(_raw):
+        raise AssertionError("graph reached parse_weight")
+
+    def fake_render(entries):
+        rendered_entries.append(entries)
+        return "TERMINAL GRAPH"
+
+    monkeypatch.setattr(cli, "parse_weight", reject_weight)
+    monkeypatch.setattr(cli, "render_graph", fake_render)
+
+    exit_code = cli.main(
+        ["--db-path", str(tmp_path / "weights.sqlite"), "graph"]
+    )
+
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    assert captured.out == "TERMINAL GRAPH\n"
+    assert captured.err == ""
+    assert len(rendered_entries) == 1
+    assert rendered_entries[0] == []
+
+
+def test_graph_command_empty_database_is_clear(tmp_path, capsys):
+    exit_code = cli.main(
+        ["--db-path", str(tmp_path / "weights.sqlite"), "graph"]
+    )
+
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    assert captured.out == "No measurements to graph.\n"
+    assert captured.err == ""
+
+
+def test_graph_command_with_data_prints_only_graph(
+    tmp_path, monkeypatch, capsys
+):
+    csv_path = tmp_path / "seed.csv"
+    csv_path.write_text(
+        "date,weight_kg\n2026-07-01,122.0\n2026-07-03,123.0\n",
+        encoding="utf-8",
+    )
+    db_path = tmp_path / "weights.sqlite"
+    assert cli.main(
+        ["--db-path", str(db_path), "--import", str(csv_path)]
+    ) == 0
+    capsys.readouterr()
+
+    def fake_render(entries):
+        assert len(entries) == 2
+        return "GRAPH WITH DATA"
+
+    monkeypatch.setattr(cli, "render_graph", fake_render)
+    assert cli.main(["--db-path", str(db_path), "graph"]) == 0
+
+    captured = capsys.readouterr()
+    assert captured.out == "GRAPH WITH DATA\n"
+    assert "Date        Weight kg" not in captured.out
+
+
 def test_stats_flag_rejects_weight_argument(tmp_path, capsys):
     exit_code = cli.main(["--db-path", str(tmp_path / "weights.sqlite"), "--stats", "122.0"])
 
@@ -115,6 +179,7 @@ def test_help_mentions_default_database_and_taipei(capsys):
     assert "Default database:" in captured.out
     assert DEFAULT_DB_PATH.name in captured.out
     assert "Asia/Taipei" in captured.out
+    assert "weightrail graph" in captured.out
 
 
 def test_version_output(capsys):

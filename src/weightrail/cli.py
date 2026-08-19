@@ -35,6 +35,7 @@ def main(argv: list[str] | None = None, today_provider: Callable[[], date] | Non
             return 0
 
         stats_requested = args.stats or args.weight == "stats"
+        graph_requested = args.weight == "graph"
         if args.stats and args.weight is not None:
             raise ValueError("--stats cannot be combined with a weight")
 
@@ -50,7 +51,7 @@ def main(argv: list[str] | None = None, today_provider: Callable[[], date] | Non
                 imported = import_csv(connection, Path(args.import_path).expanduser())
                 print(f"Imported {imported} rows.")
 
-            if args.weight is not None and not stats_requested:
+            if args.weight is not None and not stats_requested and not graph_requested:
                 today = (today_provider or taipei_today)().isoformat()
                 weight = parse_weight(args.weight)
                 action = upsert_weight(connection, today, weight)
@@ -60,6 +61,10 @@ def main(argv: list[str] | None = None, today_provider: Callable[[], date] | Non
 
         if stats_requested:
             print(format_stats(calculate_stats(entries)))
+            return 0
+
+        if graph_requested:
+            print(render_graph(entries))
             return 0
 
         if args.summary:
@@ -86,11 +91,16 @@ def build_parser() -> argparse.ArgumentParser:
         description="Track daily weight in a local SQLite database.",
         epilog=(
             "A positional weight records or updates today's Asia/Taipei date. "
-            "Use 'weightrail stats' for basic statistics. "
+            "Use 'weightrail stats' for basic statistics or 'weightrail graph' "
+            "for the terminal graph. "
             f"Default database: {DEFAULT_DB_PATH}"
         ),
     )
-    parser.add_argument("weight", nargs="?", help="weight in kilograms for today's Asia/Taipei date, or 'stats'")
+    parser.add_argument(
+        "weight",
+        nargs="?",
+        help="weight in kilograms for today's Asia/Taipei date, or 'stats'/'graph'",
+    )
     parser.add_argument("--show", action="store_true", help="show recorded rows, terminal graph, and trend summary")
     parser.add_argument("--summary", action="store_true", help="show only the numeric trend summary")
     parser.add_argument("--stats", action="store_true", help="show basic weight statistics")

@@ -16,7 +16,13 @@ from .db import (
     parse_weight,
     upsert_weight,
 )
-from .gui_chart import WeightChart
+from .gui_chart import (
+    ALL_SERIES,
+    SERIES_LABELS,
+    WeightChart,
+    chart_series_availability,
+    prepare_chart_data,
+)
 from .stats import WeightStats, calculate_stats, format_optional_change, format_optional_weight
 
 
@@ -82,8 +88,39 @@ def main(argv: Sequence[str] | None = None) -> int:
     window = WeightrailWindow(Gtk, db_path, Figure, FigureCanvasGTK3Agg)
     window.connect("destroy", Gtk.main_quit)
     window.show_all()
-    Gtk.main()
+    try:
+        Gtk.main()
+    except KeyboardInterrupt:
+        Gtk.main_quit()
+        return 130
     return 0
+
+
+class LineVisibilityState:
+    def __init__(self) -> None:
+        self.available = {series: False for series in ALL_SERIES}
+        self.selected = {series: False for series in ALL_SERIES}
+
+    def update_availability(self, availability: dict[str, bool]) -> None:
+        for series in ALL_SERIES:
+            was_available = self.available[series]
+            is_available = availability[series]
+            self.available[series] = is_available
+            if not is_available:
+                self.selected[series] = False
+            elif not was_available:
+                self.selected[series] = True
+
+    def set_selected(self, series: str, selected: bool) -> None:
+        self.selected[series] = bool(selected and self.available[series])
+
+    @property
+    def visible_series(self) -> frozenset[str]:
+        return frozenset(
+            series
+            for series in ALL_SERIES
+            if self.available[series] and self.selected[series]
+        )
 
 
 class WeightrailWindow:
@@ -125,8 +162,28 @@ class WeightrailWindow:
 
         graph_frame = Gtk.Frame(label="Weight graph")
         root.pack_start(graph_frame, True, True, 0)
+        graph_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        graph_frame.add(graph_box)
+
+        self.line_visibility = LineVisibilityState()
+        self.line_controls = {}
+        self._syncing_line_controls = False
+        lines_expander = Gtk.Expander(label="Lines")
+        graph_box.pack_start(lines_expander, False, False, 0)
+        lines_box = Gtk.Box(
+            orientation=Gtk.Orientation.HORIZONTAL,
+            spacing=10,
+            margin=6,
+        )
+        lines_expander.add(lines_box)
+        for series in ALL_SERIES:
+            control = Gtk.CheckButton(label=SERIES_LABELS[series])
+            control.connect("toggled", self.on_line_toggled, series)
+            lines_box.pack_start(control, False, False, 0)
+            self.line_controls[series] = control
+
         self.weight_chart = WeightChart(Figure, FigureCanvasGTK3Agg)
-        graph_frame.add(self.weight_chart.canvas)
+        graph_box.pack_start(self.weight_chart.canvas, True, True, 0)
 
         recent_frame = Gtk.Frame(label="Recent entries")
         root.pack_start(recent_frame, True, True, 0)
@@ -165,10 +222,39 @@ class WeightrailWindow:
             entries = []
 
         self.refresh_stats(calculate_stats(entries))
-        self.weight_chart.refresh(entries)
+        self.refresh_chart(entries)
         self.refresh_recent(entries)
         if not entries and not self.status_label.get_text():
             self.status_label.set_text("No measurements yet. Enter today's weight to begin.")
+
+    def refresh_chart(self, entries) -> None:
+        self.chart_data = prepare_chart_data(entries)
+        self.line_visibility.update_availability(
+            chart_series_availability(self.chart_data)
+        )
+        self.sync_line_controls()
+        self.weight_chart.render(
+            self.chart_data,
+            self.line_visibility.visible_series,
+        )
+
+    def sync_line_controls(self) -> None:
+        self._syncing_line_controls = True
+        try:
+            for series, control in self.line_controls.items():
+                control.set_sensitive(self.line_visibility.available[series])
+                control.set_active(self.line_visibility.selected[series])
+        finally:
+            self._syncing_line_controls = False
+
+    def on_line_toggled(self, control, series: str) -> None:
+        if self._syncing_line_controls:
+            return
+        self.line_visibility.set_selected(series, control.get_active())
+        self.weight_chart.render(
+            self.chart_data,
+            self.line_visibility.visible_series,
+        )
 
     def refresh_stats(self, stats: WeightStats | None) -> None:
         for child in self.stats_grid.get_children():

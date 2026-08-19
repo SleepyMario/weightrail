@@ -158,6 +158,7 @@ weightrail --help
 weightrail --version
 weightrail 122.8
 weightrail stats
+weightrail graph
 weightrail --show
 weightrail --stats
 weightrail --summary
@@ -180,6 +181,12 @@ Show the basic stats without the graph:
 weightrail stats
 ```
 
+Show only the terminal graph and its legend:
+
+```bash
+weightrail graph
+```
+
 Launch the small GTK frontend:
 
 ```bash
@@ -196,6 +203,10 @@ period. Weekly means use ISO Monday-through-Sunday weeks and completed periods
 are placed on Sunday; completed monthly means are placed at calendar
 month-end. An eligible incomplete current period stops at its latest recorded
 date. The GUI chart refreshes after every record or same-day replacement.
+Its compact, collapsed `Lines` control can show or hide measurements and the
+linear, weekly, and monthly trends for the current GUI session. Lines become
+enabled and selected automatically when enough data makes them available;
+lines explicitly hidden by the user stay hidden across ordinary refreshes.
 
 The CLI and GUI use the same SQLite database by default. The GUI also accepts an alternate database path:
 

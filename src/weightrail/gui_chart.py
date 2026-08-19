@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Collection, Sequence
 from dataclasses import dataclass
 from datetime import date
 
@@ -12,6 +12,19 @@ from .monthly_trend import (
     calculate_weekly_trend,
 )
 from .stats import calculate_trend
+
+
+MEASUREMENTS = "measurements"
+LINEAR_TREND = "linear_trend"
+WEEKLY_TREND = "weekly_trend"
+MONTHLY_TREND = "monthly_trend"
+ALL_SERIES = (MEASUREMENTS, LINEAR_TREND, WEEKLY_TREND, MONTHLY_TREND)
+SERIES_LABELS = {
+    MEASUREMENTS: "Measurements",
+    LINEAR_TREND: "Linear trend",
+    WEEKLY_TREND: "Weekly trend",
+    MONTHLY_TREND: "Monthly trend",
+}
 
 
 @dataclass(frozen=True)
@@ -67,6 +80,15 @@ def prepare_chart_data(
     )
 
 
+def chart_series_availability(chart_data: ChartData) -> dict[str, bool]:
+    return {
+        MEASUREMENTS: bool(chart_data.dates),
+        LINEAR_TREND: chart_data.trend_weights is not None,
+        WEEKLY_TREND: chart_data.weekly_trend is not None,
+        MONTHLY_TREND: chart_data.monthly_trend is not None,
+    }
+
+
 class WeightChart:
     """Small Matplotlib-backed GTK chart component."""
 
@@ -77,10 +99,24 @@ class WeightChart:
         self.canvas.set_hexpand(True)
         self.canvas.set_vexpand(True)
 
-    def refresh(self, entries: Sequence[WeightEntry]) -> None:
+    def refresh(
+        self,
+        entries: Sequence[WeightEntry],
+        visible_series: Collection[str] | None = None,
+    ) -> ChartData:
+        chart_data = prepare_chart_data(entries)
+        self.render(chart_data, visible_series)
+        return chart_data
+
+    def render(
+        self,
+        chart_data: ChartData,
+        visible_series: Collection[str] | None = None,
+    ) -> None:
         from matplotlib import dates as mdates
 
-        chart_data = prepare_chart_data(entries)
+        visible = frozenset(ALL_SERIES if visible_series is None else visible_series)
+        plotted_series: list[str] = []
         self.axes.clear()
         self.axes.set_title("Weight")
 
@@ -99,25 +135,28 @@ class WeightChart:
             return
 
         self.axes.set_axis_on()
-        self.axes.plot(
-            chart_data.dates,
-            chart_data.weights,
-            color="tab:blue",
-            marker="o",
-            linewidth=1.5,
-            label="Measurements",
-        )
-        if chart_data.trend_weights is not None:
+        if MEASUREMENTS in visible:
+            self.axes.plot(
+                chart_data.dates,
+                chart_data.weights,
+                color="tab:blue",
+                marker="o",
+                linewidth=1.5,
+                label=SERIES_LABELS[MEASUREMENTS],
+            )
+            plotted_series.append(MEASUREMENTS)
+        if LINEAR_TREND in visible and chart_data.trend_weights is not None:
             self.axes.plot(
                 chart_data.dates,
                 chart_data.trend_weights,
                 color="tab:orange",
                 linestyle="--",
                 linewidth=1.5,
-                label="Linear trend",
+                label=SERIES_LABELS[LINEAR_TREND],
             )
+            plotted_series.append(LINEAR_TREND)
 
-        if chart_data.weekly_trend is not None:
+        if WEEKLY_TREND in visible and chart_data.weekly_trend is not None:
             weekly_trend = chart_data.weekly_trend
             self.axes.plot(
                 weekly_trend.smoothed_dates,
@@ -125,7 +164,7 @@ class WeightChart:
                 color="tab:purple",
                 linestyle=":",
                 linewidth=1.75,
-                label="Weekly trend",
+                label=SERIES_LABELS[WEEKLY_TREND],
             )
             self.axes.scatter(
                 weekly_trend.aggregate_dates,
@@ -135,15 +174,16 @@ class WeightChart:
                 s=20,
                 zorder=3,
             )
+            plotted_series.append(WEEKLY_TREND)
 
-        if chart_data.monthly_trend is not None:
+        if MONTHLY_TREND in visible and chart_data.monthly_trend is not None:
             monthly_trend = chart_data.monthly_trend
             self.axes.plot(
                 monthly_trend.smoothed_dates,
                 monthly_trend.smoothed_weights,
                 color="tab:green",
                 linewidth=2,
-                label="Monthly trend",
+                label=SERIES_LABELS[MONTHLY_TREND],
             )
             self.axes.scatter(
                 monthly_trend.aggregate_dates,
@@ -153,8 +193,11 @@ class WeightChart:
                 s=24,
                 zorder=3,
             )
+            plotted_series.append(MONTHLY_TREND)
 
-        if chart_data.trend_weights is not None:
+        if len(plotted_series) > 1 or any(
+            series != MEASUREMENTS for series in plotted_series
+        ):
             self.axes.legend(ncol=2)
 
         locator = mdates.AutoDateLocator(minticks=3, maxticks=8)

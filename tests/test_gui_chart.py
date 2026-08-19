@@ -5,7 +5,13 @@ from types import SimpleNamespace
 import pytest
 
 from weightrail.db import WeightEntry
-from weightrail.gui_chart import WeightChart, prepare_chart_data
+from weightrail.gui_chart import (
+    MEASUREMENTS,
+    MONTHLY_TREND,
+    WEEKLY_TREND,
+    WeightChart,
+    prepare_chart_data,
+)
 
 
 def test_prepare_chart_data_handles_empty_entries():
@@ -97,6 +103,7 @@ def test_prepare_chart_data_includes_shared_monthly_trend():
 def test_weight_chart_renders_distinct_weekly_and_monthly_series(monkeypatch):
     plot_calls = []
     scatter_calls = []
+    legend_labels = []
 
     class FakeLocator:
         def __init__(self, **_kwargs):
@@ -130,6 +137,9 @@ def test_weight_chart_renders_distinct_weekly_and_monthly_series(monkeypatch):
 
         def legend(self, **kwargs):
             assert kwargs == {"ncol": 2}
+            legend_labels.append(
+                tuple(call[2]["label"] for call in plot_calls)
+            )
 
         def set_xlabel(self, _label):
             pass
@@ -156,7 +166,7 @@ def test_weight_chart_renders_distinct_weekly_and_monthly_series(monkeypatch):
     chart.axes = FakeAxes()
     chart.figure = SimpleNamespace(tight_layout=lambda: None)
     chart.canvas = SimpleNamespace(draw_idle=lambda: None)
-    chart.refresh(
+    chart_data = chart.refresh(
         [
             WeightEntry("2026-01-05", 100.0),
             WeightEntry("2026-02-02", 95.0),
@@ -177,3 +187,29 @@ def test_weight_chart_renders_distinct_weekly_and_monthly_series(monkeypatch):
         "label": "Monthly trend",
     }
     assert {call[2]["marker"] for call in scatter_calls} == {"^", "s"}
+
+    plot_calls.clear()
+    scatter_calls.clear()
+    chart.render(chart_data, {MEASUREMENTS, MONTHLY_TREND})
+    assert [call[2]["label"] for call in plot_calls] == [
+        "Measurements",
+        "Monthly trend",
+    ]
+    assert legend_labels[-1] == ("Measurements", "Monthly trend")
+
+    plot_calls.clear()
+    scatter_calls.clear()
+    chart.render(
+        chart_data,
+        {MEASUREMENTS, WEEKLY_TREND, MONTHLY_TREND},
+    )
+    assert [call[2]["label"] for call in plot_calls] == [
+        "Measurements",
+        "Weekly trend",
+        "Monthly trend",
+    ]
+    assert legend_labels[-1] == (
+        "Measurements",
+        "Weekly trend",
+        "Monthly trend",
+    )
