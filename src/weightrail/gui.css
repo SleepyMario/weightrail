@@ -72,8 +72,9 @@ button.primary-action:active {
   padding-top: 2px;
 }
 
-.stat-label {
-  font-size: 12px;
+.stat-label,
+.stat-value {
+  font-size: 14px;
 }
 
 .stat-value {
