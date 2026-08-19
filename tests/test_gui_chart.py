@@ -1,9 +1,11 @@
+import sys
 from datetime import date
+from types import SimpleNamespace
 
 import pytest
 
 from weightrail.db import WeightEntry
-from weightrail.gui_chart import prepare_chart_data
+from weightrail.gui_chart import WeightChart, prepare_chart_data
 
 
 def test_prepare_chart_data_handles_empty_entries():
@@ -78,8 +80,100 @@ def test_prepare_chart_data_includes_shared_monthly_trend():
     )
 
     assert chart_data.monthly_trend is not None
-    assert chart_data.monthly_trend.monthly_dates == (
+    assert chart_data.monthly_trend.aggregate_dates == (
+        date(2026, 1, 31),
         date(2026, 2, 28),
         date(2026, 3, 31),
     )
-    assert chart_data.monthly_trend.monthly_means == (90.0, 80.0)
+    assert chart_data.monthly_trend.aggregate_means == (100.0, 90.0, 80.0)
+    assert chart_data.weekly_trend is not None
+    assert chart_data.weekly_trend.aggregate_dates == (
+        date(2026, 1, 11),
+        date(2026, 2, 15),
+        date(2026, 3, 15),
+    )
+
+
+def test_weight_chart_renders_distinct_weekly_and_monthly_series(monkeypatch):
+    plot_calls = []
+    scatter_calls = []
+
+    class FakeLocator:
+        def __init__(self, **_kwargs):
+            pass
+
+    class FakeAxis:
+        def set_major_locator(self, _locator):
+            pass
+
+        def set_major_formatter(self, _formatter):
+            pass
+
+    class FakeAxes:
+        def __init__(self):
+            self.xaxis = FakeAxis()
+
+        def clear(self):
+            pass
+
+        def set_title(self, _title):
+            pass
+
+        def set_axis_on(self):
+            pass
+
+        def plot(self, dates, weights, **kwargs):
+            plot_calls.append((dates, weights, kwargs))
+
+        def scatter(self, dates, weights, **kwargs):
+            scatter_calls.append((dates, weights, kwargs))
+
+        def legend(self, **kwargs):
+            assert kwargs == {"ncol": 2}
+
+        def set_xlabel(self, _label):
+            pass
+
+        def set_ylabel(self, _label):
+            pass
+
+        def grid(self, *_args, **_kwargs):
+            pass
+
+        def margins(self, **_kwargs):
+            pass
+
+        def tick_params(self, **_kwargs):
+            pass
+
+    fake_dates = SimpleNamespace(
+        AutoDateLocator=FakeLocator,
+        ConciseDateFormatter=lambda _locator: object(),
+    )
+    monkeypatch.setitem(sys.modules, "matplotlib", SimpleNamespace(dates=fake_dates))
+
+    chart = WeightChart.__new__(WeightChart)
+    chart.axes = FakeAxes()
+    chart.figure = SimpleNamespace(tight_layout=lambda: None)
+    chart.canvas = SimpleNamespace(draw_idle=lambda: None)
+    chart.refresh(
+        [
+            WeightEntry("2026-01-05", 100.0),
+            WeightEntry("2026-02-02", 95.0),
+            WeightEntry("2026-03-02", 90.0),
+        ]
+    )
+
+    calls_by_label = {call[2].get("label"): call for call in plot_calls}
+    assert calls_by_label["Weekly trend"][2] == {
+        "color": "tab:purple",
+        "linestyle": ":",
+        "linewidth": 1.75,
+        "label": "Weekly trend",
+    }
+    assert calls_by_label["Monthly trend"][2] == {
+        "color": "tab:green",
+        "linewidth": 2,
+        "label": "Monthly trend",
+    }
+    assert {call[2]["marker"] for call in scatter_calls} == {"^", "s"}

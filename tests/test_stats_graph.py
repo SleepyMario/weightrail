@@ -119,7 +119,7 @@ def test_graph_uses_plotext_without_crashing(monkeypatch):
     ) in calls
 
 
-def test_terminal_graph_uses_shared_monthly_trend_with_actual_dates(monkeypatch):
+def test_terminal_graph_uses_shared_period_trends_with_actual_dates(monkeypatch):
     calls = []
 
     class FakePlot:
@@ -158,12 +158,22 @@ def test_terminal_graph_uses_shared_monthly_trend_with_actual_dates(monkeypatch)
     monthly_call = next(
         call for call in calls if call[3].get("label") == "Monthly trend"
     )
-    assert monthly_call[1][0] == (date(2026, 2, 28) - date(2026, 1, 10)).days
+    weekly_call = next(
+        call for call in calls if call[3].get("label") == "Weekly trend"
+    )
+    assert monthly_call[1][0] == (date(2026, 1, 31) - date(2026, 1, 10)).days
     assert monthly_call[1][-1] == (date(2026, 3, 31) - date(2026, 1, 10)).days
     assert monthly_call[3] == {
         "marker": "braille",
         "color": "magenta",
         "label": "Monthly trend",
+    }
+    assert weekly_call[1][0] == (date(2026, 1, 11) - date(2026, 1, 10)).days
+    assert weekly_call[1][-1] == (date(2026, 3, 15) - date(2026, 1, 10)).days
+    assert weekly_call[3] == {
+        "marker": "hd",
+        "color": "cyan",
+        "label": "Weekly trend",
     }
 
 

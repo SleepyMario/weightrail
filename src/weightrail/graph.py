@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import date
 
 from .db import WeightEntry
-from .monthly_trend import calculate_monthly_trend
+from .monthly_trend import calculate_monthly_trend, calculate_weekly_trend
 from .stats import calculate_trend
 
 
@@ -42,6 +42,20 @@ def render_graph(
             linear_weights,
             color="orange",
             label="Linear trend",
+        )
+
+    weekly_trend = calculate_weekly_trend(entries, current_date)
+    if weekly_trend is not None:
+        weekly_days = [
+            (point_date - first_date).days
+            for point_date in weekly_trend.smoothed_dates
+        ]
+        plt.plot(
+            weekly_days,
+            list(weekly_trend.smoothed_weights),
+            marker="hd",
+            color="cyan",
+            label="Weekly trend",
         )
 
     monthly_trend = calculate_monthly_trend(entries, current_date)

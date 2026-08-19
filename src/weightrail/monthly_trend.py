@@ -1,8 +1,10 @@
+"""Shared calendar-period aggregation and shape-preserving trend smoothing."""
+
 from __future__ import annotations
 
 import calendar
 from collections import defaultdict
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import date
 
@@ -12,12 +14,37 @@ from .dates import taipei_today
 from .db import WeightEntry
 
 
+PeriodKey = tuple[int, int]
+
+
 @dataclass(frozen=True)
-class MonthlyTrendData:
-    monthly_dates: tuple[date, ...]
-    monthly_means: tuple[float, ...]
+class SmoothedTrendData:
+    aggregate_dates: tuple[date, ...]
+    aggregate_means: tuple[float, ...]
     smoothed_dates: tuple[date, ...]
     smoothed_weights: tuple[float, ...]
+
+    @property
+    def monthly_dates(self) -> tuple[date, ...]:
+        """Compatibility name for callers of the original monthly helper."""
+        return self.aggregate_dates
+
+    @property
+    def monthly_means(self) -> tuple[float, ...]:
+        """Compatibility name for callers of the original monthly helper."""
+        return self.aggregate_means
+
+    @property
+    def weekly_dates(self) -> tuple[date, ...]:
+        return self.aggregate_dates
+
+    @property
+    def weekly_means(self) -> tuple[float, ...]:
+        return self.aggregate_means
+
+
+MonthlyTrendData = SmoothedTrendData
+WeeklyTrendData = SmoothedTrendData
 
 
 def calculate_monthly_trend(
@@ -26,47 +53,85 @@ def calculate_monthly_trend(
 ) -> MonthlyTrendData | None:
     """Aggregate monthly means and return a conservative shape-preserving curve."""
     today = current_date or taipei_today()
+    return _calculate_period_trend(entries, today, _month_key, _month_end)
+
+
+def calculate_weekly_trend(
+    entries: Sequence[WeightEntry],
+    current_date: date | None = None,
+) -> WeeklyTrendData | None:
+    """Aggregate ISO-week means and return a conservative shape-preserving curve."""
+    today = current_date or taipei_today()
+    return _calculate_period_trend(entries, today, _iso_week_key, _iso_week_end)
+
+
+def _calculate_period_trend(
+    entries: Sequence[WeightEntry],
+    today: date,
+    key_for_date: Callable[[date], PeriodKey],
+    period_end: Callable[[PeriodKey], date],
+) -> SmoothedTrendData | None:
     grouped: dict[tuple[int, int], list[tuple[date, float]]] = defaultdict(list)
     for entry in entries:
         entry_date = date.fromisoformat(entry.date)
         if entry_date <= today:
-            grouped[(entry_date.year, entry_date.month)].append(
-                (entry_date, entry.weight_kg)
-            )
+            grouped[key_for_date(entry_date)].append((entry_date, entry.weight_kg))
 
-    represented_months = sorted(grouped)
-    if len(represented_months) < 2:
+    represented_periods = sorted(grouped)
+    if len(represented_periods) < 2:
+        return None
+    # Visibility is delayed, but once eligible the first aggregate is retained.
+    if today < period_end(represented_periods[1]):
         return None
 
-    monthly_points: list[tuple[date, float]] = []
-    for year, month in represented_months:
-        measurements = grouped[(year, month)]
-        month_end = date(year, month, calendar.monthrange(year, month)[1])
-        is_incomplete_current_month = (
-            (year, month) == (today.year, today.month) and today < month_end
+    aggregate_points: list[tuple[date, float]] = []
+    current_period = key_for_date(today)
+    for period in represented_periods:
+        measurements = grouped[period]
+        end_date = period_end(period)
+        is_incomplete_current_period = (
+            period == current_period and today < end_date
         )
         point_date = (
             max(measurement_date for measurement_date, _weight in measurements)
-            if is_incomplete_current_month
-            else month_end
+            if is_incomplete_current_period
+            else end_date
         )
         mean = sum(weight for _measurement_date, weight in measurements) / len(
             measurements
         )
-        monthly_points.append((point_date, mean))
+        aggregate_points.append((point_date, mean))
 
-    visible_points = monthly_points[1:]
-    monthly_dates = tuple(point[0] for point in visible_points)
-    monthly_means = tuple(point[1] for point in visible_points)
+    aggregate_dates = tuple(point[0] for point in aggregate_points)
+    aggregate_means = tuple(point[1] for point in aggregate_points)
     smoothed_dates, smoothed_weights = _shape_preserving_curve(
-        monthly_dates, monthly_means
+        aggregate_dates, aggregate_means
     )
-    return MonthlyTrendData(
-        monthly_dates=monthly_dates,
-        monthly_means=monthly_means,
+    return SmoothedTrendData(
+        aggregate_dates=aggregate_dates,
+        aggregate_means=aggregate_means,
         smoothed_dates=smoothed_dates,
         smoothed_weights=smoothed_weights,
     )
+
+
+def _month_key(value: date) -> PeriodKey:
+    return value.year, value.month
+
+
+def _month_end(period: PeriodKey) -> date:
+    year, month = period
+    return date(year, month, calendar.monthrange(year, month)[1])
+
+
+def _iso_week_key(value: date) -> PeriodKey:
+    iso_date = value.isocalendar()
+    return iso_date.year, iso_date.week
+
+
+def _iso_week_end(period: PeriodKey) -> date:
+    iso_year, iso_week = period
+    return date.fromisocalendar(iso_year, iso_week, 7)
 
 
 def _shape_preserving_curve(
