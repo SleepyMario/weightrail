@@ -7,6 +7,8 @@
   trend line.
 - Keep Matplotlib optional for CLI-only installations and update GUI-enabled
   distribution packaging.
+- Add a shared, shape-preserving monthly-mean trend to the terminal and GTK
+  charts without changing raw measurements or linear-regression calculations.
 
 ## 0.2.0 - 2026-07-13
 

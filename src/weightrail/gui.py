@@ -5,7 +5,7 @@ import sys
 from collections.abc import Sequence
 from pathlib import Path
 
-from .cli import taipei_today
+from .dates import taipei_today
 from .db import (
     DEFAULT_DB_PATH,
     LEGACY_DB_PATH,

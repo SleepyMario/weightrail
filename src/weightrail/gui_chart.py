@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from datetime import date
 
 from .db import WeightEntry
+from .monthly_trend import MonthlyTrendData, calculate_monthly_trend
 from .stats import calculate_trend
 
 
@@ -13,18 +14,30 @@ class ChartData:
     dates: tuple[date, ...]
     weights: tuple[float, ...]
     trend_weights: tuple[float, ...] | None
+    monthly_trend: MonthlyTrendData | None
 
 
-def prepare_chart_data(entries: Sequence[WeightEntry]) -> ChartData:
+def prepare_chart_data(
+    entries: Sequence[WeightEntry],
+    current_date: date | None = None,
+) -> ChartData:
     """Prepare chronologically ordered, calendar-spaced values for the GUI chart."""
     ordered_entries = sorted(entries, key=lambda entry: date.fromisoformat(entry.date))
     if not ordered_entries:
-        return ChartData(dates=(), weights=(), trend_weights=None)
+        return ChartData(
+            dates=(), weights=(), trend_weights=None, monthly_trend=None
+        )
 
     dates = tuple(date.fromisoformat(entry.date) for entry in ordered_entries)
     weights = tuple(entry.weight_kg for entry in ordered_entries)
+    monthly_trend = calculate_monthly_trend(ordered_entries, current_date)
     if len(ordered_entries) == 1:
-        return ChartData(dates=dates, weights=weights, trend_weights=None)
+        return ChartData(
+            dates=dates,
+            weights=weights,
+            trend_weights=None,
+            monthly_trend=monthly_trend,
+        )
 
     trend = calculate_trend(ordered_entries)
     assert trend is not None
@@ -33,7 +46,12 @@ def prepare_chart_data(entries: Sequence[WeightEntry]) -> ChartData:
         trend.intercept + trend.slope_kg_per_day * (entry_date - first_date).days
         for entry_date in dates
     )
-    return ChartData(dates=dates, weights=weights, trend_weights=trend_weights)
+    return ChartData(
+        dates=dates,
+        weights=weights,
+        trend_weights=trend_weights,
+        monthly_trend=monthly_trend,
+    )
 
 
 class WeightChart:
@@ -85,6 +103,26 @@ class WeightChart:
                 linewidth=1.5,
                 label="Linear trend",
             )
+
+        if chart_data.monthly_trend is not None:
+            monthly_trend = chart_data.monthly_trend
+            self.axes.plot(
+                monthly_trend.smoothed_dates,
+                monthly_trend.smoothed_weights,
+                color="tab:green",
+                linewidth=2,
+                label="Monthly trend",
+            )
+            self.axes.scatter(
+                monthly_trend.monthly_dates,
+                monthly_trend.monthly_means,
+                color="tab:green",
+                marker="s",
+                s=24,
+                zorder=3,
+            )
+
+        if chart_data.trend_weights is not None:
             self.axes.legend()
 
         locator = mdates.AutoDateLocator(minticks=3, maxticks=8)

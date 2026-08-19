@@ -189,7 +189,11 @@ weightrail-gui
 The GUI displays the same statistics and recent entries as the CLI-backed
 database, plus a graphical history chart. Measurements use their actual dates
 on the x-axis, and two or more measurements add a dashed linear trend line.
-The chart refreshes after every record or same-day replacement.
+Both graphical and terminal charts also show a conservative smoothed monthly
+trend beginning with the second represented month. Completed monthly means
+are placed at calendar month-end; an incomplete current month stops at its
+latest recorded date. The GUI chart refreshes after every record or same-day
+replacement.
 
 The CLI and GUI use the same SQLite database by default. The GUI also accepts an alternate database path:
 

@@ -3,11 +3,13 @@ from __future__ import annotations
 import argparse
 import sys
 from collections.abc import Callable
-from datetime import date, datetime, timezone
+from datetime import date
 from pathlib import Path
-from zoneinfo import ZoneInfo
 
 from . import get_version
+from .dates import TAIPEI as TAIPEI
+from .dates import taipei_date_from_datetime as taipei_date_from_datetime
+from .dates import taipei_today
 from .db import (
     DEFAULT_DB_PATH,
     LEGACY_DB_PATH,
@@ -21,9 +23,6 @@ from .db import (
 )
 from .graph import render_graph
 from .stats import calculate_stats, calculate_trend, format_stats, format_summary
-
-
-TAIPEI = ZoneInfo("Asia/Taipei")
 
 
 def main(argv: list[str] | None = None, today_provider: Callable[[], date] | None = None) -> int:
@@ -99,14 +98,6 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--db-path", default=str(DEFAULT_DB_PATH), help="SQLite database path")
     parser.add_argument("--version", action="store_true", help="show version and exit")
     return parser
-
-
-def taipei_today() -> date:
-    return taipei_date_from_datetime(datetime.now(timezone.utc))
-
-
-def taipei_date_from_datetime(value: datetime) -> date:
-    return value.astimezone(TAIPEI).date()
 
 
 def print_table(entries) -> None:

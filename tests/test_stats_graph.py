@@ -1,4 +1,5 @@
 import sys
+from datetime import date
 
 import pytest
 
@@ -91,11 +92,11 @@ def test_graph_uses_plotext_without_crashing(monkeypatch):
         def ylabel(self, value):
             calls.append(("ylabel", value))
 
-        def scatter(self, days, weights, marker):
-            calls.append(("scatter", days, weights, marker))
+        def scatter(self, days, weights, **kwargs):
+            calls.append(("scatter", days, weights, kwargs))
 
-        def plot(self, days, weights):
-            calls.append(("plot", days, weights))
+        def plot(self, days, weights, **kwargs):
+            calls.append(("plot", days, weights, kwargs))
 
         def build(self):
             return "graph"
@@ -103,8 +104,67 @@ def test_graph_uses_plotext_without_crashing(monkeypatch):
     monkeypatch.setitem(sys.modules, "plotext", FakePlot())
 
     assert render_graph([WeightEntry("2026-07-01", 122.0), WeightEntry("2026-07-03", 123.0)]) == "graph"
-    assert ("scatter", [0, 2], [122.0, 123.0], "dot") in calls
-    assert ("plot", [0, 2], [122.0, 123.0]) in calls
+    assert (
+        "scatter",
+        [0, 2],
+        [122.0, 123.0],
+        {"marker": "dot", "label": "Measurements"},
+    ) in calls
+    assert ("plot", [0, 2], [122.0, 123.0], {}) in calls
+    assert (
+        "plot",
+        [0, 2],
+        pytest.approx([122.0, 123.0]),
+        {"color": "orange", "label": "Linear trend"},
+    ) in calls
+
+
+def test_terminal_graph_uses_shared_monthly_trend_with_actual_dates(monkeypatch):
+    calls = []
+
+    class FakePlot:
+        def clear_figure(self):
+            pass
+
+        def plotsize(self, _width, _height):
+            pass
+
+        def title(self, _value):
+            pass
+
+        def xlabel(self, _value):
+            pass
+
+        def ylabel(self, _value):
+            pass
+
+        def scatter(self, days, weights, **kwargs):
+            calls.append(("scatter", days, weights, kwargs))
+
+        def plot(self, days, weights, **kwargs):
+            calls.append(("plot", days, weights, kwargs))
+
+        def build(self):
+            return "graph"
+
+    monkeypatch.setitem(sys.modules, "plotext", FakePlot())
+    entries = [
+        WeightEntry("2026-01-10", 100.0),
+        WeightEntry("2026-02-10", 95.0),
+        WeightEntry("2026-03-10", 90.0),
+    ]
+
+    assert render_graph(entries, current_date=date(2026, 4, 30)) == "graph"
+    monthly_call = next(
+        call for call in calls if call[3].get("label") == "Monthly trend"
+    )
+    assert monthly_call[1][0] == (date(2026, 2, 28) - date(2026, 1, 10)).days
+    assert monthly_call[1][-1] == (date(2026, 3, 31) - date(2026, 1, 10)).days
+    assert monthly_call[3] == {
+        "marker": "braille",
+        "color": "magenta",
+        "label": "Monthly trend",
+    }
 
 
 def test_graph_reports_when_optional_plotext_is_unavailable(monkeypatch):
