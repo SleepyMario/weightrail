@@ -6,16 +6,14 @@ This directory contains a preparation ebuild for:
 app-misc/weightrail
 ```
 
-The ebuild targets the public `v0.2.0` GitHub release archive:
+The current ebuild targets the public `v0.3.0` GitHub release archive:
 
 ```text
-https://github.com/SleepyMario/weightrail/archive/refs/tags/v0.2.0.tar.gz
+https://github.com/SleepyMario/weightrail/archive/refs/tags/v0.3.0.tar.gz
 ```
 
-The current `Manifest` was generated from the locally validated deterministic
-`weightrail-0.2.0.tar.gz`. Regenerate it against the eventual published v0.2.0
-archive if that artifact differs, then run a clean emerge test in a Gentoo
-environment before using the ebuild in a real overlay.
+The `Manifest` must match the final published `v0.3.0` tag archive. Run a clean
+emerge test in a Gentoo environment before installing the versioned package.
 
 Dependencies:
 

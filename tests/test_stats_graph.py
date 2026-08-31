@@ -22,7 +22,9 @@ def test_summary_one_record_has_zero_slope():
     assert summary is not None
     assert summary.slope_kg_per_day == 0.0
     assert summary.slope_kg_per_week == 0.0
-    assert "Measurements: 1" in format_summary(summary)
+    formatted_summary = format_summary(summary)
+    assert "Measurements: 1" in formatted_summary
+    formatted_summary.encode("ascii")
     assert stats is not None
     assert stats.entries == 1
     assert stats.latest_weight == 122.0

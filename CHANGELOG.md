@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.3.0 - 2026-08-31
 
 - Add an expanding Matplotlib weight-history chart to the GTK 3 GUI, including
   an empty state, real calendar spacing, measurement markers, and a linear
@@ -14,6 +14,8 @@
   loop cleanly on Ctrl+C, and add session-only GUI line visibility controls.
 - Modernize the GTK interface with a native header, theme-aware card styling,
   touch-friendly controls, a more prominent graph, and quieter recent entries.
+- Add a Windows-native desktop frontend and reproducible PyInstaller/NSIS
+  packaging while keeping the same local database and statistics core.
 
 ## 0.2.0 - 2026-07-13
 

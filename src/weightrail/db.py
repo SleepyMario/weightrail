@@ -14,6 +14,8 @@ def _data_home() -> Path:
     configured = os.environ.get("XDG_DATA_HOME")
     if configured:
         return Path(configured).expanduser()
+    if os.name == "nt" and os.environ.get("LOCALAPPDATA"):
+        return Path(os.environ["LOCALAPPDATA"])
     return Path.home() / ".local" / "share"
 
 
@@ -50,7 +52,9 @@ def migrate_legacy_database(
         os.close(file_descriptor)
         temporary_path = Path(temporary_name)
         shutil.copy2(legacy_path, temporary_path)
-        with temporary_path.open("rb") as handle:
+        # Windows rejects fsync() on a read-only descriptor with EBADF.
+        # Opening the copied file read/write keeps the durability step portable.
+        with temporary_path.open("r+b") as handle:
             os.fsync(handle.fileno())
         try:
             os.link(temporary_path, new_path)

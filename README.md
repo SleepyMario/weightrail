@@ -76,15 +76,22 @@ From a local checkout:
 pipx install .
 ```
 
-### Ubuntu and Debian package (local build)
+### Ubuntu package (local build)
 
-Weightrail has an initial Debian package definition for locally built packages;
-it is not published in the Ubuntu or Debian archives. Build it with normal
-Debian tooling, then install the resulting artifact:
+Weightrail includes Debian-format package metadata and a small direct package
+builder for Ubuntu; it is not published in the Ubuntu archive. After building
+the wheel, create the two installable packages with:
 
 ```bash
-sudo apt install ./weightrail_0.2.0-1_all.deb \
-  ./weightrail-gui_0.2.0-1_all.deb
+python -m build
+scripts/build-deb.sh
+```
+
+Then install the resulting artifacts:
+
+```bash
+sudo apt install ./weightrail_0.3.0-1_all.deb \
+  ./weightrail-gui_0.3.0-1_all.deb
 ```
 
 The base package installs `/usr/bin/weightrail`. Install the separate
@@ -96,7 +103,9 @@ Removing or purging the packages does not delete user data, which remains at
 This package is currently intended for local validation and distribution; it
 does not imply archive inclusion. Ubuntu 26.04 does not package `plotext`, so
 terminal graphs show a clear availability message unless that optional
-dependency is supplied by the user outside the Debian package.
+dependency is supplied by the user outside the Ubuntu package. Compatibility
+with other Debian-derived distributions may happen to work, but is not a
+release target or guarantee.
 
 ### Docker
 
@@ -133,10 +142,10 @@ These candidates are not published to AUR, Flathub, or the Snap Store.
 
 ### Gentoo
 
-An ebuild skeleton is present at:
+An ebuild is present at:
 
 ```text
-gentoo/app-misc/weightrail/weightrail-0.2.0.ebuild
+gentoo/app-misc/weightrail/weightrail-0.3.0.ebuild
 ```
 
 Current Gentoo status:
@@ -148,8 +157,18 @@ Current Gentoo status:
   `dev-python/matplotlib[gtk3]`.
 - On this machine, `dev-python/plotext` is available through Guru.
 - Systems without Guru may need Guru enabled or a local `plotext` ebuild.
-- The versioned ebuild uses the GitHub v0.2.0 tag archive.
+- The versioned ebuild uses the GitHub v0.3.0 tag archive.
 - `Manifest` records the validated release archive hashes.
+
+### Windows
+
+The Windows release contains a native desktop frontend and the command-line
+tool. Both use the same local SQLite database and calculation code as the Linux
+packages. The installer is built on Windows with PyInstaller and NSIS; no
+Python installation is required on the destination computer.
+
+Build instructions and the installer definition live in
+[`packaging/windows`](packaging/windows/README.md).
 
 ## Usage
 
@@ -305,7 +324,7 @@ The output includes:
 - net change;
 - slope in kg/day;
 - slope in kg/week;
-- approximate equation `w(d) ≈ md + b`, where `d` is days since the first recorded entry.
+- approximate equation `w(d) ~= md + b`, where `d` is days since the first recorded entry.
 
 This is a simple numerical trend summary, not a medical prediction.
 

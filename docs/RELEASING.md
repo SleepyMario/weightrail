@@ -39,7 +39,7 @@ Do not publish to PyPI unless that is requested separately.
 
    ```bash
    python -m venv /tmp/weightrail-wheel-test
-   /tmp/weightrail-wheel-test/bin/python -m pip install dist/weightrail-0.2.0-py3-none-any.whl
+   /tmp/weightrail-wheel-test/bin/python -m pip install dist/weightrail-0.3.0-py3-none-any.whl
    /tmp/weightrail-wheel-test/bin/weightrail --version
    /tmp/weightrail-wheel-test/bin/weightrail --db-path /tmp/wheel-weights.sqlite 123.4
    /tmp/weightrail-wheel-test/bin/weightrail --db-path /tmp/wheel-weights.sqlite --show
@@ -50,7 +50,7 @@ Do not publish to PyPI unless that is requested separately.
 
    ```bash
    python -m venv /tmp/weightrail-sdist-test
-   /tmp/weightrail-sdist-test/bin/python -m pip install dist/weightrail-0.2.0.tar.gz
+   /tmp/weightrail-sdist-test/bin/python -m pip install dist/weightrail-0.3.0.tar.gz
    /tmp/weightrail-sdist-test/bin/weightrail --version
    /tmp/weightrail-sdist-test/bin/weightrail --db-path /tmp/sdist-weights.sqlite 123.4
    /tmp/weightrail-sdist-test/bin/weightrail --db-path /tmp/sdist-weights.sqlite --summary
@@ -59,24 +59,24 @@ Do not publish to PyPI unless that is requested separately.
 7. Review archive contents:
 
    ```bash
-   tar -tzf dist/weightrail-0.2.0.tar.gz
-   python -m zipfile -l dist/weightrail-0.2.0-py3-none-any.whl
+   tar -tzf dist/weightrail-0.3.0.tar.gz
+   python -m zipfile -l dist/weightrail-0.3.0-py3-none-any.whl
    ```
 
 8. Create the local annotated tag:
 
    ```bash
-   git tag -a v0.2.0 -m "weightrail 0.2.0"
+   git tag -a v0.3.0 -m "weightrail 0.3.0"
    ```
 
 9. Push commit and tag:
 
    ```bash
    git push -u origin main
-   git push origin v0.2.0
+   git push origin v0.3.0
    ```
 
-10. Create a GitHub release and upload `dist/weightrail-0.2.0.tar.gz`, `dist/weightrail-0.2.0-py3-none-any.whl`, and `dist/SHA256SUMS`.
+10. Create a GitHub release and upload `dist/weightrail-0.3.0.tar.gz`, `dist/weightrail-0.3.0-py3-none-any.whl`, and `dist/SHA256SUMS`.
 
 11. Update the Gentoo ebuild `SRC_URI` and regenerate `Manifest` after the final release archive URL exists.
 

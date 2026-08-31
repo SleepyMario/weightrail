@@ -187,7 +187,7 @@ def test_version_output(capsys):
 
     captured = capsys.readouterr()
     assert exit_code == 0
-    assert captured.out == "weightrail 0.2.0\n"
+    assert captured.out == "weightrail 0.3.0\n"
     assert captured.err == ""
 
 

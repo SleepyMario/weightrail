@@ -1,3 +1,4 @@
+import os
 import stat
 from pathlib import Path
 
@@ -69,7 +70,8 @@ def test_migration_copies_legacy_database_and_preserves_mode(tmp_path):
 
     assert db.migrate_legacy_database(new_path, legacy_path) is True
     assert new_path.read_bytes() == legacy_path.read_bytes()
-    assert stat.S_IMODE(new_path.stat().st_mode) == 0o640
+    if os.name != "nt":
+        assert stat.S_IMODE(new_path.stat().st_mode) == 0o640
     assert legacy_path.read_bytes() == b"legacy database contents"
 
 

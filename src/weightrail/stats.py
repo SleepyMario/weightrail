@@ -172,7 +172,7 @@ def format_summary(summary: TrendSummary | None) -> str:
             f"Net change: {summary.net_change:+.1f} kg",
             f"Slope: {summary.slope_kg_per_day:+.4f} kg/day",
             f"Slope: {summary.slope_kg_per_week:+.4f} kg/week",
-            f"Equation: w(d) ≈ {summary.slope_kg_per_day:.4f}d + {summary.intercept:.2f}",
+            f"Equation: w(d) ~= {summary.slope_kg_per_day:.4f}d + {summary.intercept:.2f}",
             "where d = days since first recorded entry.",
         ]
     )
