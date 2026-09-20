@@ -1,9 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=Weightrail
-Comment=Track weight locally with statistics and trends
-Exec=weightrail-gui
-Icon=io.github.SleepyMario.weightrail
-Terminal=false
-Categories=Utility;
-StartupNotify=true

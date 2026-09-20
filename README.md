@@ -133,12 +133,6 @@ does not include GTK or the optional `plotext` graph dependency. Commands that
 would draw a graph instead report that `plotext` is unavailable; statistics
 and summaries remain fully functional.
 
-### Additional Linux packaging candidates
-
-Local, validated packaging instructions are available for
-[Arch Linux/AUR](packaging/arch/README.md),
-[Flatpak](packaging/flatpak/README.md), and [Snap](packaging/snap/README.md).
-These candidates are not published to AUR, Flathub, or the Snap Store.
 
 ### Gentoo
 
