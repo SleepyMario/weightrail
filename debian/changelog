@@ -1,3 +1,11 @@
+weightrail (0.3.1-1) UNRELEASED; urgency=medium
+
+  * Keep Docker, Debian, Gentoo, and Windows as supported package targets.
+  * Build Ubuntu packages in the canonical Ubuntu 24.04 container.
+  * Record and validate one shared source version across platform artifacts.
+
+ -- Ashwin <ashwin@users.noreply.github.com>  Sun, 20 Sep 2026 17:25:00 +0800
+
 weightrail (0.3.0-1) UNRELEASED; urgency=medium
 
   * Add weekly and monthly trend lines to terminal and GTK charts.

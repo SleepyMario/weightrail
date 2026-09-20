@@ -16,6 +16,9 @@ $Output = Join-Path $Root "dist-windows"
 
 Set-Location $Root
 
+py -3 (Join-Path $Root "scripts\check-version-consistency.py")
+Assert-NativeSuccess "Checking package version consistency"
+
 if (Test-Path $Venv) { Remove-Item -Recurse -Force $Venv }
 if (Test-Path $Build) { Remove-Item -Recurse -Force $Build }
 if (Test-Path $Output) { Remove-Item -Recurse -Force $Output }

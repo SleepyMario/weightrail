@@ -1,7 +1,7 @@
 Unicode True
 
 !ifndef VERSION
-  !define VERSION "0.3.0"
+  !define VERSION "0.3.1"
 !endif
 !ifndef SOURCE_DIR
   !define SOURCE_DIR "build-windows"
@@ -16,7 +16,7 @@ InstallDir "$LOCALAPPDATA\Programs\Weightrail"
 RequestExecutionLevel user
 SetCompressor /SOLID lzma
 
-VIProductVersion "0.3.0.0"
+VIProductVersion "${VERSION}.0"
 VIAddVersionKey /LANG=1033 "ProductName" "Weightrail"
 VIAddVersionKey /LANG=1033 "FileDescription" "Weightrail installer"
 VIAddVersionKey /LANG=1033 "FileVersion" "${VERSION}"

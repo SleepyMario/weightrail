@@ -5,6 +5,8 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OUTPUT_DIR="${1:-$ROOT/dist/debian}"
 IMAGE="${DEB_BUILD_IMAGE:-docker.io/library/ubuntu:24.04}"
 
+python "$ROOT/scripts/check-version-consistency.py"
+
 mkdir -p "$OUTPUT_DIR"
 OUTPUT_DIR="$(realpath "$OUTPUT_DIR")"
 

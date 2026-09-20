@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.3.1 - 2026-09-20
+
+- Define Docker, Debian/Ubuntu, Gentoo, and Windows as the maintained package
+  targets, and retire the unfinished RPM, Arch, Flatpak, and Snap candidates.
+- Build Debian packages in a disposable Ubuntu 24.04 container instead of
+  requiring Debian packaging tools on the Gentoo build worker.
+- Pin and validate the Docker base image and record the application version and
+  source revision in the resulting image metadata.
+- Validate the Windows installer and portable package from the same source
+  version used by the Linux build worker.
+
 ## 0.3.0 - 2026-08-31
 
 - Add an expanding Matplotlib weight-history chart to the GTK 3 GUI, including

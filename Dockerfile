@@ -1,3 +1,6 @@
+ARG WEIGHTRAIL_VERSION=0.3.1
+ARG VCS_REF=unknown
+
 FROM docker.io/library/python:3.12-slim@sha256:c3d81d25b3154142b0b42eb1e61300024426268edeb5b5a26dd7ddf64d9daf28 AS builder
 
 WORKDIR /build
@@ -23,9 +26,14 @@ RUN python -m pip install --no-cache-dir --no-compile --no-index \
 
 FROM docker.io/library/python:3.12-slim@sha256:c3d81d25b3154142b0b42eb1e61300024426268edeb5b5a26dd7ddf64d9daf28
 
+ARG WEIGHTRAIL_VERSION
+ARG VCS_REF
+
 LABEL org.opencontainers.image.title="Weightrail" \
       org.opencontainers.image.description="Local-first SQLite-backed terminal weight tracker" \
       org.opencontainers.image.source="https://github.com/SleepyMario/weightrail" \
+      org.opencontainers.image.version="${WEIGHTRAIL_VERSION}" \
+      org.opencontainers.image.revision="${VCS_REF}" \
       org.opencontainers.image.licenses="MIT"
 
 ENV PYTHONDONTWRITEBYTECODE=1 \

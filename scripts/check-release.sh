@@ -15,6 +15,7 @@ if [[ -n "$worktree_status" ]]; then
   exit 1
 fi
 
+python scripts/check-version-consistency.py
 python -m compileall src
 python -m pytest
 rm -rf dist build *.egg-info src/*.egg-info

@@ -90,8 +90,8 @@ scripts/build-deb.sh
 Then install the resulting artifacts:
 
 ```bash
-sudo apt install ./weightrail_0.3.0-1_all.deb \
-  ./weightrail-gui_0.3.0-1_all.deb
+sudo apt install ./weightrail_0.3.1-1_all.deb \
+  ./weightrail-gui_0.3.1-1_all.deb
 ```
 
 The base package installs `/usr/bin/weightrail`. Install the separate
@@ -114,7 +114,7 @@ The published Docker image is CLI-only, targets Linux amd64, and runs
 latest tag from Docker Hub:
 
 ```bash
-docker pull sleepiestmario/weightrail:0.2.0
+docker pull sleepiestmario/weightrail:0.3.1
 docker pull sleepiestmario/weightrail:latest
 ```
 
@@ -139,7 +139,7 @@ and summaries remain fully functional.
 An ebuild is present at:
 
 ```text
-gentoo/app-misc/weightrail/weightrail-0.3.0.ebuild
+gentoo/app-misc/weightrail/weightrail-0.3.1.ebuild
 ```
 
 Current Gentoo status:
@@ -151,8 +151,9 @@ Current Gentoo status:
   `dev-python/matplotlib[gtk3]`.
 - On this machine, `dev-python/plotext` is available through Guru.
 - Systems without Guru may need Guru enabled or a local `plotext` ebuild.
-- The versioned ebuild uses the GitHub v0.3.0 tag archive.
-- `Manifest` records the validated release archive hashes.
+- The versioned ebuild uses the corresponding GitHub release tag archive.
+- The canonical `mushroom-overlay` Manifest is generated and tested after the
+  release tag exists.
 
 ### Windows
 
