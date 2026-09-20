@@ -23,7 +23,7 @@
 - Move default data to the Weightrail XDG data directory with a safe one-time
   copy from the former default path.
 - Make terminal graph support optional when `plotext` is unavailable.
-- Update source, RPM, Gentoo, Docker, documentation, tests, and release tooling
+- Update source, Gentoo, Docker, documentation, tests, and release tooling
   for the canonical identity.
 
 ## 0.1.0 - 2026-07-05
