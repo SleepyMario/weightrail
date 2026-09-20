@@ -16,6 +16,8 @@ if [[ -n "$worktree_status" ]]; then
 fi
 
 python scripts/check-version-consistency.py
+rm -rf dist build *.egg-info src/*.egg-info
+python -m pip install --no-deps --editable .
 python -m compileall src
 python -m pytest
 rm -rf dist build *.egg-info src/*.egg-info

@@ -99,4 +99,7 @@ The local helper script runs the validation flow without publishing:
 scripts/check-release.sh
 ```
 
-It does not tag, push, publish, require root, or touch the default user database.
+Run it from a dedicated build virtual environment. It refreshes that
+environment's editable Weightrail installation before testing so stale package
+metadata cannot supply an older version number. It does not tag, push, publish,
+require root, or touch the default user database.
