@@ -8,13 +8,16 @@ COPY src ./src
 RUN python -m pip wheel --no-cache-dir --wheel-dir /wheels .
 
 RUN python -m pip install --no-cache-dir --no-compile --no-index \
-        --find-links=/wheels --prefix=/install weightrail==0.2.0 \
+        --find-links=/wheels --prefix=/install weightrail \
     && rm -f /install/bin/weightrail-gui \
     && rm -f /install/lib/python3.12/site-packages/weightrail/gui.py \
+    && dist_info="$(find /install/lib/python3.12/site-packages -maxdepth 1 \
+        -type d -name 'weightrail-*.dist-info' -print -quit)" \
+    && test -n "$dist_info" \
     && sed -i '/^weightrail-gui = /d' \
-        /install/lib/python3.12/site-packages/weightrail-0.2.0.dist-info/entry_points.txt \
+        "$dist_info/entry_points.txt" \
     && sed -i '/weightrail\/gui.py/d' \
-        /install/lib/python3.12/site-packages/weightrail-0.2.0.dist-info/RECORD \
+        "$dist_info/RECORD" \
     && find /install/lib/python3.12/site-packages/numpy \
         -type d -name tests -prune -exec rm -rf {} +
 
@@ -22,10 +25,8 @@ FROM docker.io/library/python:3.12-slim@sha256:c3d81d25b3154142b0b42eb1e61300024
 
 LABEL org.opencontainers.image.title="Weightrail" \
       org.opencontainers.image.description="Local-first SQLite-backed terminal weight tracker" \
-      org.opencontainers.image.version="0.2.0" \
       org.opencontainers.image.source="https://github.com/SleepyMario/weightrail" \
-      org.opencontainers.image.licenses="MIT" \
-      org.opencontainers.image.revision="a5bf34eb1dec403f20a0160137fb9253527eef16"
+      org.opencontainers.image.licenses="MIT"
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \

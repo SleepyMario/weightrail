@@ -80,6 +80,17 @@ Do not publish to PyPI unless that is requested separately.
 
 11. Update the Gentoo ebuild `SRC_URI` and regenerate `Manifest` after the final release archive URL exists.
 
+12. Build Debian packages in the canonical Ubuntu 24.04 environment:
+
+   ```bash
+   scripts/build-deb-container.sh
+   ```
+
+   The disposable container installs the Debian build dependencies, runs the
+   package tests through `dpkg-buildpackage`, and writes artifacts under
+   `dist/debian/` by default. The Gentoo build VM does not need host-installed
+   Debian packaging tools.
+
 ## Helper Script
 
 The local helper script runs the validation flow without publishing:
