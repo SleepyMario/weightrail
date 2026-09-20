@@ -1,0 +1,19 @@
+Description: Use the legacy license table with Ubuntu 24.04 setuptools
+ Ubuntu 24.04 ships setuptools 68, whose pyproject schema predates the
+ PEP 639 SPDX string form used by current setuptools.  Keep upstream's
+ modern metadata and adapt it only while building the Ubuntu package.
+Author: Ashwin <ashwin@users.noreply.github.com>
+Forwarded: not-needed
+Last-Update: 2026-09-20
+---
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -8,7 +8,7 @@ version = "0.3.1"
+ description = "Local-first SQLite-backed weight tracker with CLI and optional GTK GUI."
+ readme = "README.md"
+ requires-python = ">=3.10"
+-license = "MIT"
++license = { text = "MIT" }
+ license-files = ["LICENSE"]
+ authors = [
+   { name = "Ashwin" }
