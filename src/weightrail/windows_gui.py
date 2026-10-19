@@ -10,9 +10,12 @@ from .db import (
     DEFAULT_DB_PATH,
     DatabaseError,
     connect,
+    list_vitals,
     list_weights,
     migrate_legacy_database,
+    parse_vital,
     parse_weight,
+    upsert_vitals,
     upsert_weight,
 )
 from .gui_chart import (
@@ -119,6 +122,35 @@ class WeightrailWindowsApp:
         self.weight.bind("<Return>", self.record)
         ttk.Button(entry_frame, text="Record today", command=self.record).pack(side="right")
 
+        vitals_frame = ttk.LabelFrame(outer, text="Today's vitals", padding=12)
+        vitals_frame.pack(fill="x", pady=(0, 12))
+        self.systolic = ttk.Entry(vitals_frame, font=("Segoe UI", 12), width=12)
+        self.systolic.insert(0, "Upper mmHg")
+        self.systolic.pack(side="left", fill="x", expand=True, padx=(0, 8))
+        self.diastolic = ttk.Entry(vitals_frame, font=("Segoe UI", 12), width=12)
+        self.diastolic.insert(0, "Lower mmHg")
+        self.diastolic.pack(side="left", fill="x", expand=True, padx=(0, 8))
+        self.resting_heart_rate = ttk.Entry(
+            vitals_frame,
+            font=("Segoe UI", 12),
+            width=12,
+        )
+        self.resting_heart_rate.insert(0, "Resting bpm")
+        self.resting_heart_rate.pack(
+            side="left",
+            fill="x",
+            expand=True,
+            padx=(0, 10),
+        )
+        for entry in (self.systolic, self.diastolic, self.resting_heart_rate):
+            entry.bind("<Return>", self.record_vitals)
+            entry.bind("<FocusIn>", self.clear_vitals_placeholder)
+        ttk.Button(
+            vitals_frame,
+            text="Record vitals",
+            command=self.record_vitals,
+        ).pack(side="right")
+
         self.status = ttk.Label(outer, text="", style="Subtitle.TLabel")
         self.status.pack(fill="x", pady=(0, 8))
 
@@ -162,7 +194,23 @@ class WeightrailWindowsApp:
         self.recent.column("date", anchor="w")
         self.recent.column("weight", anchor="e", width=120)
         self.recent.pack(fill="both", expand=True)
+        recent_vitals = ttk.LabelFrame(outer, text="Recent vitals", padding=8)
+        recent_vitals.pack(fill="both", pady=(12, 0))
+        self.recent_vitals = ttk.Treeview(
+            recent_vitals,
+            columns=("date", "pressure", "heart_rate"),
+            show="headings",
+            height=5,
+        )
+        self.recent_vitals.heading("date", text="Date")
+        self.recent_vitals.heading("pressure", text="Blood pressure mmHg")
+        self.recent_vitals.heading("heart_rate", text="Resting bpm")
+        self.recent_vitals.column("date", anchor="w")
+        self.recent_vitals.column("pressure", anchor="e", width=160)
+        self.recent_vitals.column("heart_rate", anchor="e", width=120)
+        self.recent_vitals.pack(fill="both", expand=True)
         self.entries = []
+        self.vital_entries = []
 
     def record(self, _event=None) -> None:
         try:
@@ -175,10 +223,54 @@ class WeightrailWindowsApp:
         except (ValueError, DatabaseError) as exc:
             self.messagebox.showerror("Unable to record weight", str(exc), parent=self.root)
 
+    def clear_vitals_placeholder(self, event) -> None:
+        placeholders = {"Upper mmHg", "Lower mmHg", "Resting bpm"}
+        if event.widget.get() in placeholders:
+            event.widget.delete(0, self.tk.END)
+
+    def record_vitals(self, _event=None) -> None:
+        try:
+            systolic = parse_vital(
+                self.systolic.get().strip(),
+                "upper blood pressure",
+            )
+            diastolic = parse_vital(
+                self.diastolic.get().strip(),
+                "lower blood pressure",
+            )
+            heart_rate = parse_vital(
+                self.resting_heart_rate.get().strip(),
+                "resting heart rate",
+            )
+            with connect(self.db_path) as connection:
+                action = upsert_vitals(
+                    connection,
+                    taipei_today().isoformat(),
+                    systolic,
+                    diastolic,
+                    heart_rate,
+                )
+            for entry in (self.systolic, self.diastolic, self.resting_heart_rate):
+                entry.delete(0, self.tk.END)
+            self.status.configure(
+                text=(
+                    f"{action.capitalize()} today's vitals: "
+                    f"{systolic}/{diastolic} mmHg, {heart_rate} bpm"
+                )
+            )
+            self.refresh()
+        except (ValueError, DatabaseError) as exc:
+            self.messagebox.showerror(
+                "Unable to record vitals",
+                str(exc),
+                parent=self.root,
+            )
+
     def refresh(self) -> None:
         try:
             with connect(self.db_path) as connection:
                 self.entries = list_weights(connection)
+                self.vital_entries = list_vitals(connection)
         except DatabaseError as exc:
             self.messagebox.showerror("Unable to read data", str(exc), parent=self.root)
             return
@@ -201,6 +293,18 @@ class WeightrailWindowsApp:
             self.recent.delete(item)
         for entry in reversed(self.entries[-10:]):
             self.recent.insert("", "end", values=(entry.date, f"{entry.weight_kg:.1f}"))
+        for item in self.recent_vitals.get_children():
+            self.recent_vitals.delete(item)
+        for entry in reversed(self.vital_entries[-10:]):
+            self.recent_vitals.insert(
+                "",
+                "end",
+                values=(
+                    entry.date,
+                    f"{entry.systolic_mmhg}/{entry.diastolic_mmhg}",
+                    entry.resting_heart_rate_bpm,
+                ),
+            )
         self.render_chart()
 
     def render_chart(self) -> None:

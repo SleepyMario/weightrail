@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.4.0 - 2026-10-19
+
+- Add a separate daily record for upper and lower blood pressure and resting
+  heart rate, with the same safe same-day update behavior as weight entries.
+- Add vital-sign entry controls and recent-history views to both the GTK and
+  Windows desktop applications.
+- Add command-line vital-sign recording and display while keeping weight
+  graphs, trends, and statistics focused on weight measurements.
+- Upgrade existing databases in place by adding the new table without changing
+  or removing existing weight records.
+
 ## 0.3.1 - 2026-09-20
 
 - Define Docker, Debian/Ubuntu, Gentoo, and Windows as the maintained package

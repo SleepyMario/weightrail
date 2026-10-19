@@ -161,6 +161,55 @@ def test_invalid_weight_returns_nonzero_and_uses_stderr(tmp_path, capsys):
     assert "weight must be positive" in captured.err
 
 
+def test_vitals_flags_record_and_replace_today(tmp_path, capsys):
+    db_path = tmp_path / "weights.sqlite"
+    today = lambda: date(2026, 10, 19)
+    first = [
+        "--db-path",
+        str(db_path),
+        "--systolic",
+        "132",
+        "--diastolic",
+        "84",
+        "--resting-heart-rate",
+        "67",
+    ]
+    second = [
+        "--db-path",
+        str(db_path),
+        "--systolic",
+        "128",
+        "--diastolic",
+        "80",
+        "--resting-heart-rate",
+        "63",
+    ]
+
+    assert cli.main(first, today_provider=today) == 0
+    capsys.readouterr()
+    assert cli.main(second, today_provider=today) == 0
+
+    captured = capsys.readouterr()
+    assert "Updated 128/80 mmHg and 63 bpm for 2026-10-19." in captured.out
+    assert "2026-10-19          128/80           63" in captured.out
+    assert "132/84" not in captured.out
+
+
+def test_vitals_flags_must_be_used_together(tmp_path, capsys):
+    exit_code = cli.main(
+        [
+            "--db-path",
+            str(tmp_path / "weights.sqlite"),
+            "--systolic",
+            "120",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert exit_code == 1
+    assert "must be used together" in captured.err
+
+
 def test_invalid_command_returns_nonzero(capsys):
     with pytest.raises(SystemExit) as exc:
         cli.main(["--does-not-exist"])
@@ -187,7 +236,7 @@ def test_version_output(capsys):
 
     captured = capsys.readouterr()
     assert exit_code == 0
-    assert captured.out == "weightrail 0.3.1\n"
+    assert captured.out == "weightrail 0.4.0\n"
     assert captured.err == ""
 
 

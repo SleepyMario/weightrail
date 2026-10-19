@@ -33,6 +33,14 @@ class WeightEntry:
     weight_kg: float
 
 
+@dataclass(frozen=True)
+class VitalEntry:
+    date: str
+    systolic_mmhg: int
+    diastolic_mmhg: int
+    resting_heart_rate_bpm: int
+
+
 def migrate_legacy_database(
     new_path: Path = DEFAULT_DB_PATH,
     legacy_path: Path = LEGACY_DB_PATH,
@@ -85,6 +93,18 @@ def connect(db_path: Path) -> sqlite3.Connection:
             )
             """
         )
+        connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS vitals (
+                date TEXT PRIMARY KEY,
+                systolic_mmhg INTEGER NOT NULL CHECK(systolic_mmhg > 0),
+                diastolic_mmhg INTEGER NOT NULL CHECK(diastolic_mmhg > 0),
+                resting_heart_rate_bpm INTEGER NOT NULL
+                    CHECK(resting_heart_rate_bpm > 0),
+                CHECK(systolic_mmhg > diastolic_mmhg)
+            )
+            """
+        )
         connection.commit()
         return connection
     except sqlite3.Error as exc:
@@ -122,6 +142,64 @@ def list_weights(connection: sqlite3.Connection) -> list[WeightEntry]:
     except sqlite3.Error as exc:
         raise DatabaseError(f"Unable to read weights: {exc}") from exc
     return [WeightEntry(date=row[0], weight_kg=float(row[1])) for row in rows]
+
+
+def upsert_vitals(
+    connection: sqlite3.Connection,
+    date: str,
+    systolic_mmhg: int,
+    diastolic_mmhg: int,
+    resting_heart_rate_bpm: int,
+) -> str:
+    validate_vitals(systolic_mmhg, diastolic_mmhg, resting_heart_rate_bpm)
+    try:
+        existing = connection.execute(
+            "SELECT 1 FROM vitals WHERE date = ?",
+            (date,),
+        ).fetchone()
+        connection.execute(
+            """
+            INSERT INTO vitals(
+                date,
+                systolic_mmhg,
+                diastolic_mmhg,
+                resting_heart_rate_bpm
+            )
+            VALUES(?, ?, ?, ?)
+            ON CONFLICT(date) DO UPDATE SET
+                systolic_mmhg = excluded.systolic_mmhg,
+                diastolic_mmhg = excluded.diastolic_mmhg,
+                resting_heart_rate_bpm = excluded.resting_heart_rate_bpm
+            """,
+            (date, systolic_mmhg, diastolic_mmhg, resting_heart_rate_bpm),
+        )
+        connection.commit()
+        return "updated" if existing else "recorded"
+    except sqlite3.Error as exc:
+        raise DatabaseError(f"Unable to save vitals for {date}: {exc}") from exc
+
+
+def list_vitals(connection: sqlite3.Connection) -> list[VitalEntry]:
+    try:
+        rows = connection.execute(
+            """
+            SELECT date, systolic_mmhg, diastolic_mmhg,
+                   resting_heart_rate_bpm
+            FROM vitals
+            ORDER BY date
+            """
+        ).fetchall()
+    except sqlite3.Error as exc:
+        raise DatabaseError(f"Unable to read vitals: {exc}") from exc
+    return [
+        VitalEntry(
+            date=row[0],
+            systolic_mmhg=int(row[1]),
+            diastolic_mmhg=int(row[2]),
+            resting_heart_rate_bpm=int(row[3]),
+        )
+        for row in rows
+    ]
 
 
 def import_csv(connection: sqlite3.Connection, csv_path: Path) -> int:
@@ -169,6 +247,16 @@ def parse_weight(value: str) -> float:
     return weight
 
 
+def parse_vital(value: str, name: str) -> int:
+    try:
+        parsed = int(value)
+    except ValueError as exc:
+        raise ValueError(f"{name} must be a whole number: {value!r}") from exc
+    if parsed <= 0:
+        raise ValueError(f"{name} must be positive")
+    return parsed
+
+
 def parse_date(value: str, row_number: int | None = None) -> str:
     try:
         parsed = date.fromisoformat(value)
@@ -181,6 +269,24 @@ def parse_date(value: str, row_number: int | None = None) -> str:
 def validate_weight(weight_kg: float) -> None:
     if weight_kg <= 0:
         raise ValueError("weight must be positive")
+
+
+def validate_vitals(
+    systolic_mmhg: int,
+    diastolic_mmhg: int,
+    resting_heart_rate_bpm: int,
+) -> None:
+    for value, name in (
+        (systolic_mmhg, "upper blood pressure"),
+        (diastolic_mmhg, "lower blood pressure"),
+        (resting_heart_rate_bpm, "resting heart rate"),
+    ):
+        if not isinstance(value, int) or isinstance(value, bool):
+            raise ValueError(f"{name} must be a whole number")
+        if value <= 0:
+            raise ValueError(f"{name} must be positive")
+    if systolic_mmhg <= diastolic_mmhg:
+        raise ValueError("upper blood pressure must be higher than lower blood pressure")
 
 
 def is_blank_row(row: dict[str, str | None]) -> bool:

@@ -1,4 +1,4 @@
-"""SQLite-backed terminal weight tracker."""
+"""SQLite-backed weight and vital-sign tracker."""
 
 from importlib.metadata import version
 

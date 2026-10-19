@@ -4,7 +4,7 @@ from datetime import date
 import pytest
 
 from weightrail import gui
-from weightrail.db import WeightEntry, connect, list_weights
+from weightrail.db import VitalEntry, WeightEntry, connect, list_vitals, list_weights
 from weightrail.gui_chart import (
     ALL_SERIES,
     LINEAR_TREND,
@@ -161,6 +161,7 @@ def test_refresh_reuses_one_loaded_entry_list(monkeypatch, tmp_path):
         return entries
 
     monkeypatch.setattr(gui, "list_weights", fake_list_weights)
+    monkeypatch.setattr(gui, "list_vitals", lambda _connection: [])
     monkeypatch.setattr(gui, "calculate_stats", lambda values: ("stats", values))
 
     class StatusLabel:
@@ -183,6 +184,9 @@ def test_refresh_reuses_one_loaded_entry_list(monkeypatch, tmp_path):
         def refresh_recent(self, values):
             refreshed.append(("recent", values))
 
+        def refresh_recent_vitals(self, values):
+            refreshed.append(("recent_vitals", values))
+
     gui.WeightrailWindow.refresh(Window())
 
     assert len(list_calls) == 1
@@ -192,6 +196,48 @@ def test_refresh_reuses_one_loaded_entry_list(monkeypatch, tmp_path):
     assert chart_entries is entries
     assert recent_entries is entries
     assert stats[1] is entries
+
+
+def test_record_vitals_updates_today_and_refreshes(monkeypatch, tmp_path):
+    db_path = tmp_path / "weights.sqlite"
+    refreshed = []
+
+    class Entry:
+        def __init__(self, text):
+            self.text = text
+
+        def get_text(self):
+            return self.text
+
+        def set_text(self, value):
+            self.text = value
+
+    class StatusLabel:
+        def set_text(self, value):
+            self.text = value
+
+    window = type("Window", (), {})()
+    window.db_path = db_path
+    window.systolic_entry = Entry("128")
+    window.diastolic_entry = Entry("81")
+    window.resting_heart_rate_entry = Entry("64")
+    window.vitals_status_label = StatusLabel()
+    window.refresh = lambda: refreshed.append(True)
+    monkeypatch.setattr(gui, "taipei_today", lambda: date(2026, 10, 19))
+
+    gui.WeightrailWindow.on_record_vitals_clicked(window)
+
+    with connect(db_path) as connection:
+        entries = list_vitals(connection)
+    assert entries == [VitalEntry("2026-10-19", 128, 81, 64)]
+    assert window.systolic_entry.text == ""
+    assert window.diastolic_entry.text == ""
+    assert window.resting_heart_rate_entry.text == ""
+    assert (
+        window.vitals_status_label.text
+        == "Recorded 128/81 mmHg and 64 bpm for 2026-10-19."
+    )
+    assert refreshed == [True]
 
 
 def test_record_flow_still_updates_today_and_refreshes(monkeypatch, tmp_path):
@@ -252,6 +298,31 @@ def test_recent_entries_remain_latest_first_and_limited():
     assert len(rows) == gui.RECENT_ENTRY_LIMIT
     assert rows[0] == ["2026-08-12", "112.0"]
     assert rows[-1] == ["2026-08-03", "103.0"]
+
+
+def test_recent_vitals_remain_latest_first_and_limited():
+    calls = []
+
+    class Store:
+        def clear(self):
+            calls.append(("clear",))
+
+        def append(self, row):
+            calls.append(("append", row))
+
+    window = type("Window", (), {})()
+    window.recent_vitals_store = Store()
+    entries = [
+        VitalEntry(f"2026-10-{day:02d}", 120 + day, 80 + day, 60 + day)
+        for day in range(1, 13)
+    ]
+
+    gui.WeightrailWindow.refresh_recent_vitals(window, entries)
+
+    rows = [call[1] for call in calls if call[0] == "append"]
+    assert len(rows) == gui.RECENT_ENTRY_LIMIT
+    assert rows[0] == ["2026-10-12", "132/92", "72"]
+    assert rows[-1] == ["2026-10-03", "123/83", "63"]
 
 
 def test_line_visibility_defaults_and_unavailable_controls():

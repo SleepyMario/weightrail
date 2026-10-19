@@ -1,12 +1,14 @@
 # Weightrail
 
-`weightrail` is a small, local-first command-line weight tracker.
+`weightrail` is a small, local-first tracker for weight, blood pressure, and
+resting heart rate.
 
 It stores measurements in a local SQLite database, prints recorded rows, draws a terminal chart, and reports a simple linear trend summary. No account is required, no network service is used, and missing dates stay missing instead of being filled or interpolated automatically.
 
 ## Features
 
 - Daily weight recording from the terminal.
+- Daily upper/lower blood-pressure and resting-heart-rate recording.
 - `Asia/Taipei` date default for positional entries.
 - CSV import for seed or migrated data.
 - Full record display in date order.
@@ -90,8 +92,8 @@ scripts/build-deb.sh
 Then install the resulting artifacts:
 
 ```bash
-sudo apt install ./weightrail_0.3.1-1_all.deb \
-  ./weightrail-gui_0.3.1-1_all.deb
+sudo apt install ./weightrail_0.4.0-1_all.deb \
+  ./weightrail-gui_0.4.0-1_all.deb
 ```
 
 The base package installs `/usr/bin/weightrail`. Install the separate
@@ -114,7 +116,7 @@ The published Docker image is CLI-only, targets Linux amd64, and runs
 latest tag from Docker Hub:
 
 ```bash
-docker pull sleepiestmario/weightrail:0.3.1
+docker pull sleepiestmario/weightrail:0.4.0
 docker pull sleepiestmario/weightrail:latest
 ```
 
@@ -139,7 +141,7 @@ and summaries remain fully functional.
 An ebuild is present at:
 
 ```text
-gentoo/app-misc/weightrail/weightrail-0.3.1.ebuild
+gentoo/app-misc/weightrail/weightrail-0.4.0.ebuild
 ```
 
 Current Gentoo status:
@@ -171,6 +173,7 @@ Build instructions and the installer definition live in
 weightrail --help
 weightrail --version
 weightrail 122.8
+weightrail --systolic 120 --diastolic 80 --resting-heart-rate 60
 weightrail stats
 weightrail graph
 weightrail --show
@@ -188,6 +191,15 @@ weightrail 122.8
 ```
 
 After adding or updating the row, the command prints the full table, graph, and trend summary.
+
+Record or update today's upper/lower blood pressure and resting heart rate:
+
+```bash
+weightrail --systolic 120 --diastolic 80 --resting-heart-rate 60
+```
+
+All three vital-sign options are required together. The values are stored as a
+separate daily record, so a day can have weight, vital signs, or both.
 
 Show the basic stats without the graph:
 
@@ -207,8 +219,8 @@ Launch the small GTK frontend:
 weightrail-gui
 ```
 
-The GUI displays the same statistics and recent entries as the CLI-backed
-database, plus a graphical history chart. Measurements use their actual dates
+The GUI displays weight statistics, recent weight and vital-sign entries, and
+a graphical weight-history chart. Measurements use their actual dates
 on the x-axis, and two or more measurements add a dashed linear trend line.
 Its GTK-native, single-column interface uses a compact header, touch-friendly
 entry controls, theme-aware summary cards, a prominent graph, and a quieter
@@ -239,7 +251,9 @@ When you pass a positional weight, the CLI uses the current date in:
 Asia/Taipei
 ```
 
-The date is stored as `YYYY-MM-DD`. If a row already exists for that date, the existing row is updated. Duplicate rows for the same date are not created.
+The date is stored as `YYYY-MM-DD`. If a weight or vital-sign record already
+exists for that date, that record is updated. Duplicate rows of the same type
+for the same date are not created.
 
 Imported CSV dates are used exactly as supplied after `YYYY-MM-DD` validation.
 
@@ -252,6 +266,8 @@ The default database path is:
 ```
 
 Parent directories are created automatically when the database is opened.
+Existing databases are upgraded in place by adding the vital-sign table;
+existing weight records are left unchanged.
 
 On the first default-path startup after upgrading from the former project name,
 Weightrail atomically copies
@@ -328,6 +344,7 @@ This is a simple numerical trend summary, not a medical prediction.
 Common errors are reported with a nonzero exit status:
 
 - invalid weight values, including zero and negative values;
+- incomplete or invalid vital-sign values;
 - missing CSV files;
 - malformed CSV headers or rows;
 - unwritable database locations;

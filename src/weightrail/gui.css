@@ -41,7 +41,8 @@ headerbar.app-header .title {
   font-size: 12px;
 }
 
-entry.weight-entry {
+entry.weight-entry,
+entry.measurement-entry {
   min-height: 42px;
   padding: 2px 12px;
   border-radius: 8px;

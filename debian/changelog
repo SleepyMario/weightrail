@@ -1,3 +1,11 @@
+weightrail (0.4.0-1) UNRELEASED; urgency=medium
+
+  * Record daily blood pressure and resting heart rate.
+  * Add vital-sign entry and history to the Linux and Windows interfaces.
+  * Preserve existing weight data with an additive database upgrade.
+
+ -- Ashwin <ashwin@users.noreply.github.com>  Mon, 19 Oct 2026 12:00:00 +0800
+
 weightrail (0.3.1-1) UNRELEASED; urgency=medium
 
   * Keep Docker, Debian, Gentoo, and Windows as supported package targets.

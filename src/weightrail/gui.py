@@ -12,9 +12,12 @@ from .db import (
     LEGACY_DB_PATH,
     DatabaseError,
     connect,
+    list_vitals,
     list_weights,
     migrate_legacy_database,
+    parse_vital,
     parse_weight,
+    upsert_vitals,
     upsert_weight,
 )
 from .gui_chart import (
@@ -199,6 +202,40 @@ class WeightrailWindow:
         add_style_classes(self.status_label, "status-label")
         entry_card.pack_start(self.status_label, False, False, 0)
 
+        vitals_card = self.create_card(
+            "Today's vitals",
+            "Record or update upper/lower blood pressure and resting heart rate.",
+        )
+        root.pack_start(vitals_card, False, False, 0)
+
+        vitals_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        vitals_card.pack_start(vitals_row, False, False, 0)
+        self.systolic_entry = self.create_number_entry("Upper mmHg")
+        self.diastolic_entry = self.create_number_entry("Lower mmHg")
+        self.resting_heart_rate_entry = self.create_number_entry("Resting bpm")
+        for entry in (
+            self.systolic_entry,
+            self.diastolic_entry,
+            self.resting_heart_rate_entry,
+        ):
+            entry.connect("activate", self.on_record_vitals_clicked)
+            vitals_row.pack_start(entry, True, True, 0)
+
+        self.record_vitals_button = Gtk.Button(label="Record vitals")
+        self.record_vitals_button.connect("clicked", self.on_record_vitals_clicked)
+        add_style_classes(
+            self.record_vitals_button,
+            "suggested-action",
+            "primary-action",
+        )
+        vitals_row.pack_start(self.record_vitals_button, False, False, 0)
+
+        self.vitals_status_label = Gtk.Label()
+        self.vitals_status_label.set_xalign(0)
+        self.vitals_status_label.set_line_wrap(True)
+        add_style_classes(self.vitals_status_label, "status-label")
+        vitals_card.pack_start(self.vitals_status_label, False, False, 0)
+
         stats_card = self.create_card("At a glance")
         root.pack_start(stats_card, False, False, 0)
         self.stats_grid = Gtk.Grid(column_spacing=28, row_spacing=10)
@@ -269,6 +306,39 @@ class WeightrailWindow:
         recent_scroll.add(self.recent_view)
         recent_card.pack_start(recent_scroll, False, False, 0)
 
+        recent_vitals_card = self.create_card(
+            "Recent vitals",
+            "Your latest blood-pressure and resting-heart-rate measurements.",
+            "recent-card",
+        )
+        root.pack_start(recent_vitals_card, False, False, 0)
+        self.recent_vitals_store = Gtk.ListStore(str, str, str)
+        self.recent_vitals_view = Gtk.TreeView(model=self.recent_vitals_store)
+        self.recent_vitals_view.set_headers_visible(True)
+        add_style_classes(self.recent_vitals_view, "recent-table")
+        for index, title_text in enumerate(
+            ("Date", "Blood pressure mmHg", "Resting bpm")
+        ):
+            renderer = Gtk.CellRendererText()
+            if index > 0:
+                renderer.set_property("xalign", 1.0)
+            column = Gtk.TreeViewColumn(title_text, renderer, text=index)
+            column.set_expand(index == 0)
+            self.recent_vitals_view.append_column(column)
+
+        recent_vitals_scroll = Gtk.ScrolledWindow()
+        recent_vitals_scroll.set_policy(
+            Gtk.PolicyType.NEVER,
+            Gtk.PolicyType.AUTOMATIC,
+        )
+        recent_vitals_scroll.set_shadow_type(Gtk.ShadowType.NONE)
+        recent_vitals_scroll.set_min_content_height(120)
+        recent_vitals_scroll.set_max_content_height(210)
+        recent_vitals_scroll.set_propagate_natural_height(True)
+        add_style_classes(recent_vitals_scroll, "recent-scroll")
+        recent_vitals_scroll.add(self.recent_vitals_view)
+        recent_vitals_card.pack_start(recent_vitals_scroll, False, False, 0)
+
         self.refresh()
 
     def __getattr__(self, name: str):
@@ -297,6 +367,13 @@ class WeightrailWindow:
 
         return card
 
+    def create_number_entry(self, placeholder: str):
+        entry = self.Gtk.Entry()
+        entry.set_placeholder_text(placeholder)
+        entry.set_input_purpose(self.Gtk.InputPurpose.DIGITS)
+        add_style_classes(entry, "measurement-entry")
+        return entry
+
     def on_record_clicked(self, *_args) -> None:
         raw_weight = self.weight_entry.get_text().strip()
         try:
@@ -310,17 +387,57 @@ class WeightrailWindow:
         except (DatabaseError, ValueError) as exc:
             self.status_label.set_text(f"Error: {exc}")
 
+    def on_record_vitals_clicked(self, *_args) -> None:
+        try:
+            systolic = parse_vital(
+                self.systolic_entry.get_text().strip(),
+                "upper blood pressure",
+            )
+            diastolic = parse_vital(
+                self.diastolic_entry.get_text().strip(),
+                "lower blood pressure",
+            )
+            resting_heart_rate = parse_vital(
+                self.resting_heart_rate_entry.get_text().strip(),
+                "resting heart rate",
+            )
+            today = taipei_today().isoformat()
+            with connect(self.db_path) as connection:
+                action = upsert_vitals(
+                    connection,
+                    today,
+                    systolic,
+                    diastolic,
+                    resting_heart_rate,
+                )
+            for entry in (
+                self.systolic_entry,
+                self.diastolic_entry,
+                self.resting_heart_rate_entry,
+            ):
+                entry.set_text("")
+            self.vitals_status_label.set_text(
+                f"{action.title()} {systolic}/{diastolic} mmHg and "
+                f"{resting_heart_rate} bpm for {today}."
+            )
+            self.refresh()
+        except (DatabaseError, ValueError) as exc:
+            self.vitals_status_label.set_text(f"Error: {exc}")
+
     def refresh(self) -> None:
         try:
             with connect(self.db_path) as connection:
                 entries = list_weights(connection)
+                vital_entries = list_vitals(connection)
         except DatabaseError as exc:
             self.status_label.set_text(f"Error: {exc}")
             entries = []
+            vital_entries = []
 
         self.refresh_stats(calculate_stats(entries))
         self.refresh_chart(entries)
         self.refresh_recent(entries)
+        self.refresh_recent_vitals(vital_entries)
         if not entries and not self.status_label.get_text():
             self.status_label.set_text("No measurements yet. Enter today's weight to begin.")
 
@@ -395,6 +512,17 @@ class WeightrailWindow:
         self.recent_store.clear()
         for entry in reversed(entries[-RECENT_ENTRY_LIMIT:]):
             self.recent_store.append([entry.date, f"{entry.weight_kg:.1f}"])
+
+    def refresh_recent_vitals(self, entries) -> None:
+        self.recent_vitals_store.clear()
+        for entry in reversed(entries[-RECENT_ENTRY_LIMIT:]):
+            self.recent_vitals_store.append(
+                [
+                    entry.date,
+                    f"{entry.systolic_mmhg}/{entry.diastolic_mmhg}",
+                    str(entry.resting_heart_rate_bpm),
+                ]
+            )
 
 
 if __name__ == "__main__":

@@ -1,11 +1,11 @@
-.TH WEIGHTRAIL 1 "2026-07-11" "Weightrail 0.2.0" "User Commands"
+.TH WEIGHTRAIL 1 "2026-10-19" "Weightrail 0.4.0" "User Commands"
 .SH NAME
-weightrail \- record and review local weight measurements
+weightrail \- record and review local weight and vital-sign measurements
 .SH SYNOPSIS
 .B weightrail
 .RI [ options ] " [weight|stats]"
 .SH DESCRIPTION
-Weightrail is a local-first terminal weight tracker.  It stores measurements
+Weightrail is a local-first terminal weight and vital-sign tracker.  It stores measurements
 in a per-user SQLite database and never requires a service or network account.
 .SH COMMANDS AND OPTIONS
 A positional
@@ -14,6 +14,18 @@ records or updates today's date in the Asia/Taipei timezone.
 The positional command
 .B stats
 prints basic statistics.
+.TP
+.BI --systolic " MMHG"
+Record the upper blood-pressure reading for today.  Use together with
+.BR --diastolic
+and
+.BR --resting-heart-rate .
+.TP
+.BI --diastolic " MMHG"
+Record the lower blood-pressure reading for today.
+.TP
+.BI --resting-heart-rate " BPM"
+Record the resting heart rate for today.
 .TP
 .B --show
 Show recorded rows, a terminal graph when the optional plotext dependency is

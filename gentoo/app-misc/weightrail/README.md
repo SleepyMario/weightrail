@@ -6,14 +6,14 @@ This directory contains a preparation ebuild for:
 app-misc/weightrail
 ```
 
-The current ebuild is prepared for the `v0.3.1` GitHub release archive:
+The current ebuild is prepared for the `v0.4.0` GitHub release archive:
 
 ```text
-https://github.com/SleepyMario/weightrail/archive/refs/tags/v0.3.1.tar.gz
+https://github.com/SleepyMario/weightrail/archive/refs/tags/v0.4.0.tar.gz
 ```
 
 The canonical overlay `Manifest` must be generated from the final published
-`v0.3.1` tag archive. Run a clean emerge test in a Gentoo environment before
+`v0.4.0` tag archive. Run a clean emerge test in a Gentoo environment before
 installing the versioned package.
 
 Dependencies:

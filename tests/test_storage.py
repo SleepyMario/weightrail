@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 
 from weightrail import db
-from weightrail.db import DatabaseError, WeightEntry
+from weightrail.db import DatabaseError, VitalEntry, WeightEntry
 
 
 def test_creates_new_database_and_schema(tmp_path):
@@ -13,9 +13,46 @@ def test_creates_new_database_and_schema(tmp_path):
 
     with db.connect(db_path) as connection:
         columns = connection.execute("PRAGMA table_info(weights)").fetchall()
+        vital_columns = connection.execute("PRAGMA table_info(vitals)").fetchall()
 
     assert db_path.exists()
     assert [column[1] for column in columns] == ["date", "weight_kg"]
+    assert [column[1] for column in vital_columns] == [
+        "date",
+        "systolic_mmhg",
+        "diastolic_mmhg",
+        "resting_heart_rate_bpm",
+    ]
+
+
+def test_adds_updates_and_reads_vitals_in_date_order(tmp_path):
+    db_path = tmp_path / "weights.sqlite"
+
+    with db.connect(db_path) as connection:
+        assert db.upsert_vitals(connection, "2026-10-19", 132, 84, 67) == "recorded"
+        assert db.upsert_vitals(connection, "2026-10-18", 129, 82, 65) == "recorded"
+        assert db.upsert_vitals(connection, "2026-10-19", 128, 80, 63) == "updated"
+        entries = db.list_vitals(connection)
+
+    assert entries == [
+        VitalEntry("2026-10-18", 129, 82, 65),
+        VitalEntry("2026-10-19", 128, 80, 63),
+    ]
+
+
+@pytest.mark.parametrize(
+    "values,message",
+    [
+        ((0, 80, 60), "upper blood pressure must be positive"),
+        ((120, 0, 60), "lower blood pressure must be positive"),
+        ((120, 80, 0), "resting heart rate must be positive"),
+        ((80, 120, 60), "upper blood pressure must be higher"),
+    ],
+)
+def test_rejects_invalid_vitals(tmp_path, values, message):
+    with db.connect(tmp_path / "weights.sqlite") as connection:
+        with pytest.raises(ValueError, match=message):
+            db.upsert_vitals(connection, "2026-10-19", *values)
 
 
 def test_adds_updates_and_reads_records_in_date_order(tmp_path):

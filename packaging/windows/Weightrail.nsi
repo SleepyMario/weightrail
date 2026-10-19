@@ -1,7 +1,7 @@
 Unicode True
 
 !ifndef VERSION
-  !define VERSION "0.3.1"
+  !define VERSION "0.4.0"
 !endif
 !ifndef SOURCE_DIR
   !define SOURCE_DIR "build-windows"

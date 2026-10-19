@@ -16,9 +16,12 @@ from .db import (
     DatabaseError,
     connect,
     import_csv,
+    list_vitals,
     list_weights,
     migrate_legacy_database,
+    parse_vital,
     parse_weight,
+    upsert_vitals,
     upsert_weight,
 )
 from .graph import render_graph
@@ -38,6 +41,17 @@ def main(argv: list[str] | None = None, today_provider: Callable[[], date] | Non
         graph_requested = args.weight == "graph"
         if args.stats and args.weight is not None:
             raise ValueError("--stats cannot be combined with a weight")
+        vital_values = (
+            args.systolic,
+            args.diastolic,
+            args.resting_heart_rate,
+        )
+        if any(value is not None for value in vital_values) and not all(
+            value is not None for value in vital_values
+        ):
+            raise ValueError(
+                "--systolic, --diastolic, and --resting-heart-rate must be used together"
+            )
 
         db_path = Path(args.db_path).expanduser()
         if db_path == DEFAULT_DB_PATH and migrate_legacy_database():
@@ -57,7 +71,28 @@ def main(argv: list[str] | None = None, today_provider: Callable[[], date] | Non
                 action = upsert_weight(connection, today, weight)
                 print(f"{action.title()} {weight:.1f} kg for {today}.")
 
+            if all(value is not None for value in vital_values):
+                today = (today_provider or taipei_today)().isoformat()
+                systolic = parse_vital(args.systolic, "upper blood pressure")
+                diastolic = parse_vital(args.diastolic, "lower blood pressure")
+                heart_rate = parse_vital(
+                    args.resting_heart_rate,
+                    "resting heart rate",
+                )
+                action = upsert_vitals(
+                    connection,
+                    today,
+                    systolic,
+                    diastolic,
+                    heart_rate,
+                )
+                print(
+                    f"{action.title()} {systolic}/{diastolic} mmHg and "
+                    f"{heart_rate} bpm for {today}."
+                )
+
             entries = list_weights(connection)
+            vital_entries = list_vitals(connection)
 
         if stats_requested:
             print(format_stats(calculate_stats(entries)))
@@ -71,8 +106,15 @@ def main(argv: list[str] | None = None, today_provider: Callable[[], date] | Non
             print(format_summary(calculate_trend(entries)))
             return 0
 
-        if args.show or args.weight is not None or args.import_path is not None:
+        if (
+            args.show
+            or args.weight is not None
+            or args.import_path is not None
+            or all(value is not None for value in vital_values)
+        ):
             print_table(entries)
+            print()
+            print_vitals_table(vital_entries)
             print()
             print(render_graph(entries))
             print()
@@ -88,9 +130,10 @@ def main(argv: list[str] | None = None, today_provider: Callable[[], date] | Non
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Track daily weight in a local SQLite database.",
+        description="Track daily weight and vital signs in a local SQLite database.",
         epilog=(
-            "A positional weight records or updates today's Asia/Taipei date. "
+            "A positional weight or a complete set of vital-sign options records or "
+            "updates today's Asia/Taipei date. "
             "Use 'weightrail stats' for basic statistics or 'weightrail graph' "
             "for the terminal graph. "
             f"Default database: {DEFAULT_DB_PATH}"
@@ -105,6 +148,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--summary", action="store_true", help="show only the numeric trend summary")
     parser.add_argument("--stats", action="store_true", help="show basic weight statistics")
     parser.add_argument("--import", dest="import_path", help="import date,weight_kg CSV rows and update existing dates")
+    parser.add_argument("--systolic", help="upper blood pressure in mmHg")
+    parser.add_argument("--diastolic", help="lower blood pressure in mmHg")
+    parser.add_argument(
+        "--resting-heart-rate",
+        help="resting heart rate in beats per minute",
+    )
     parser.add_argument("--db-path", default=str(DEFAULT_DB_PATH), help="SQLite database path")
     parser.add_argument("--version", action="store_true", help="show version and exit")
     return parser
@@ -119,3 +168,15 @@ def print_table(entries) -> None:
     print("----------  ---------")
     for entry in entries:
         print(f"{entry.date}  {entry.weight_kg:9.1f}")
+
+
+def print_vitals_table(entries) -> None:
+    if not entries:
+        print("No vitals recorded.")
+        return
+
+    print("Date        Blood pressure  Resting bpm")
+    print("----------  --------------  -----------")
+    for entry in entries:
+        pressure = f"{entry.systolic_mmhg}/{entry.diastolic_mmhg}"
+        print(f"{entry.date}  {pressure:>14}  {entry.resting_heart_rate_bpm:11d}")

@@ -60,6 +60,9 @@ $SmokeDb = Join-Path $env:TEMP "weightrail-windows-package-smoke.sqlite"
 if (Test-Path $SmokeDb) { Remove-Item -Force $SmokeDb }
 & (Join-Path $Build "Weightrail-CLI.exe") --db-path $SmokeDb 123.4 | Out-Null
 Assert-NativeSuccess "Writing with the packaged CLI"
+& (Join-Path $Build "Weightrail-CLI.exe") --db-path $SmokeDb `
+  --systolic 120 --diastolic 80 --resting-heart-rate 60 | Out-Null
+Assert-NativeSuccess "Writing vital signs with the packaged CLI"
 & (Join-Path $Build "Weightrail-CLI.exe") --db-path $SmokeDb --summary | Out-Null
 Assert-NativeSuccess "Reading with the packaged CLI"
 Remove-Item -Force $SmokeDb

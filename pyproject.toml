@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "weightrail"
-version = "0.3.1"
-description = "Local-first SQLite-backed weight tracker with CLI and optional GTK GUI."
+version = "0.4.0"
+description = "Local-first SQLite-backed weight and vital-sign tracker with CLI and optional GTK GUI."
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
@@ -13,7 +13,7 @@ license-files = ["LICENSE"]
 authors = [
   { name = "Ashwin" }
 ]
-keywords = ["cli", "gtk", "sqlite", "weight", "tracker", "terminal"]
+keywords = ["blood-pressure", "cli", "gtk", "heart-rate", "sqlite", "weight", "tracker", "terminal"]
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Environment :: Console",
