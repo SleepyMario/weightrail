@@ -34,6 +34,8 @@ python -m venv "$tmpdir/wheel-venv"
 "$tmpdir/wheel-venv/bin/weightrail" --version
 "$tmpdir/wheel-venv/bin/weightrail" --help >/dev/null
 "$tmpdir/wheel-venv/bin/weightrail" --db-path "$tmpdir/wheel.sqlite" 123.4 >/dev/null
+"$tmpdir/wheel-venv/bin/weightrail" --db-path "$tmpdir/wheel.sqlite" \
+    --systolic 120 --diastolic 80 --resting-heart-rate 60 >/dev/null
 "$tmpdir/wheel-venv/bin/weightrail" --db-path "$tmpdir/wheel.sqlite" --show >/dev/null
 "$tmpdir/wheel-venv/bin/weightrail" --db-path "$tmpdir/wheel.sqlite" --summary >/dev/null
 
@@ -41,6 +43,8 @@ python -m venv "$tmpdir/sdist-venv"
 "$tmpdir/sdist-venv/bin/python" -m pip install "dist/weightrail-${version}.tar.gz"
 "$tmpdir/sdist-venv/bin/weightrail" --version
 "$tmpdir/sdist-venv/bin/weightrail" --db-path "$tmpdir/sdist.sqlite" 123.4 >/dev/null
+"$tmpdir/sdist-venv/bin/weightrail" --db-path "$tmpdir/sdist.sqlite" \
+    --systolic 120 --diastolic 80 --resting-heart-rate 60 >/dev/null
 "$tmpdir/sdist-venv/bin/weightrail" --db-path "$tmpdir/sdist.sqlite" --summary >/dev/null
 
 tar -tzf "dist/weightrail-${version}.tar.gz"
