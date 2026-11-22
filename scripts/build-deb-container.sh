@@ -10,7 +10,7 @@ python "$ROOT/scripts/check-version-consistency.py"
 mkdir -p "$OUTPUT_DIR"
 OUTPUT_DIR="$(realpath "$OUTPUT_DIR")"
 
-docker run --rm \
+docker run --rm --user 0:0 \
     -e DEBIAN_FRONTEND=noninteractive \
     -e HOST_UID="$(id -u)" \
     -e HOST_GID="$(id -g)" \
@@ -28,6 +28,9 @@ docker run --rm \
             pybuild-plugin-pyproject \
             python3-all \
             python3-numpy \
+            python3-matplotlib \
+            python3-gi \
+            gir1.2-gtk-3.0 \
             python3-pytest \
             python3-setuptools \
             python3-wheel

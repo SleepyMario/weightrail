@@ -211,3 +211,49 @@ class WeightChart:
         self.axes.tick_params(axis="x", labelrotation=30)
         self.figure.tight_layout()
         self.canvas.draw_idle()
+
+
+VITAL_CHARTS = {
+    "blood_pressure": ("Blood pressure", "mmHg", (("systolic_mmhg", "Systolic", "tab:red"), ("diastolic_mmhg", "Diastolic", "tab:blue"))),
+    "heart_rate": ("Resting heart rate", "bpm", (("resting_heart_rate_bpm", "Heart rate", "tab:purple"),)),
+}
+
+
+def render_vital_chart(axes, entries, metric):
+    """Draw recorded vitals on a calendar axis; no inferred measurements."""
+    from matplotlib import dates as mdates
+    title, unit, series = VITAL_CHARTS[metric]
+    ordered = sorted(entries, key=lambda entry: date.fromisoformat(entry.date))
+    axes.clear()
+    axes.set_title(title)
+    if not ordered:
+        axes.text(0.5, 0.5, "No measurements to graph.", ha="center", va="center", transform=axes.transAxes)
+        axes.set_axis_off()
+        return
+    axes.set_axis_on()
+    dates = [date.fromisoformat(entry.date) for entry in ordered]
+    for field, label, color in series:
+        axes.plot(dates, [getattr(entry, field) for entry in ordered], marker="o", linewidth=1.5, label=label, color=color)
+    locator = mdates.AutoDateLocator(minticks=3, maxticks=7)
+    axes.xaxis.set_major_locator(locator)
+    axes.xaxis.set_major_formatter(mdates.ConciseDateFormatter(locator))
+    axes.set_xlabel("Date")
+    axes.set_ylabel(unit)
+    axes.grid(True, alpha=0.25)
+    axes.legend()
+
+
+class VitalChart:
+    def __init__(self, Figure, FigureCanvasGTK3Agg, metric):
+        self.metric = metric
+        self.figure = Figure(figsize=(7, 3.6), dpi=100)
+        self.axes = self.figure.add_subplot(111)
+        self.canvas = FigureCanvasGTK3Agg(self.figure)
+        self.canvas.set_size_request(320, 320)
+        self.canvas.set_hexpand(True)
+        self.canvas.set_vexpand(True)
+
+    def refresh(self, entries):
+        render_vital_chart(self.axes, entries, self.metric)
+        self.figure.tight_layout()
+        self.canvas.draw_idle()

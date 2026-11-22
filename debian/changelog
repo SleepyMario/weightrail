@@ -1,3 +1,9 @@
+weightrail (0.5.0-1) UNRELEASED; urgency=medium
+
+  * Add blood-pressure and heart-rate charts.
+
+ -- Ashwin <ashwin@users.noreply.github.com>  Sun, 25 Oct 2026 21:45:00 +0800
+
 weightrail (0.4.0-1) UNRELEASED; urgency=medium
 
   * Record daily blood pressure and resting heart rate.

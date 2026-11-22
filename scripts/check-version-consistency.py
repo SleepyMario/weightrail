@@ -46,6 +46,8 @@ def main() -> int:
         "Windows",
     )
 
+    require_match(ROOT / "android" / "AndroidManifest.xml", r'android:versionName="([^"]+)"', version, "Android")
+
     ebuild = (
         ROOT
         / "gentoo"

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.5.0 - 2026-11-22
+
+- Unify Linux, Windows, Docker and initial Android release versions.
+
+- Add blood-pressure history with systolic and diastolic together, and a separate resting-heart-rate graph.
+- Add Weight, Blood pressure, and Heart rate tabs on Linux and Windows; include vital graphs in terminal graph/show output.
+
 ## 0.4.0 - 2026-10-19
 
 - Add a separate daily record for upper and lower blood pressure and resting

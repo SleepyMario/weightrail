@@ -24,6 +24,7 @@ from .gui_chart import (
     ALL_SERIES,
     SERIES_LABELS,
     WeightChart,
+    VitalChart,
     chart_series_availability,
     prepare_chart_data,
 )
@@ -248,7 +249,14 @@ class WeightrailWindow:
             "Measurements and trends over time.",
             "graph-card",
         )
-        root.pack_start(graph_card, True, True, 0)
+        charts = Gtk.Notebook()
+        root.pack_start(charts, True, True, 0)
+        charts.append_page(graph_card, Gtk.Label(label="Weight"))
+        self.vital_charts = []
+        for metric, title in (("blood_pressure", "Blood pressure"), ("heart_rate", "Heart rate")):
+            chart = VitalChart(Figure, FigureCanvasGTK3Agg, metric)
+            charts.append_page(chart.canvas, Gtk.Label(label=title))
+            self.vital_charts.append(chart)
 
         self.line_visibility = LineVisibilityState()
         self.line_controls = {}
@@ -438,6 +446,8 @@ class WeightrailWindow:
         self.refresh_chart(entries)
         self.refresh_recent(entries)
         self.refresh_recent_vitals(vital_entries)
+        for chart in self.vital_charts:
+            chart.refresh(vital_entries)
         if not entries and not self.status_label.get_text():
             self.status_label.set_text("No measurements yet. Enter today's weight to begin.")
 

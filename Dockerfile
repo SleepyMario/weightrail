@@ -1,4 +1,4 @@
-ARG WEIGHTRAIL_VERSION=0.4.0
+ARG WEIGHTRAIL_VERSION=0.5.0
 ARG VCS_REF=unknown
 
 FROM docker.io/library/python:3.12-slim@sha256:c3d81d25b3154142b0b42eb1e61300024426268edeb5b5a26dd7ddf64d9daf28 AS builder
@@ -8,10 +8,10 @@ WORKDIR /build
 COPY pyproject.toml README.md LICENSE ./
 COPY src ./src
 
-RUN python -m pip wheel --no-cache-dir --wheel-dir /wheels .
+RUN python -m pip wheel --no-cache-dir --wheel-dir /wheels ".[graph]"
 
 RUN python -m pip install --no-cache-dir --no-compile --no-index \
-        --find-links=/wheels --prefix=/install weightrail \
+        --find-links=/wheels --prefix=/install "weightrail[graph]" \
     && rm -f /install/bin/weightrail-gui \
     && rm -f /install/lib/python3.12/site-packages/weightrail/gui.py \
     && dist_info="$(find /install/lib/python3.12/site-packages -maxdepth 1 \

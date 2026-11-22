@@ -172,6 +172,7 @@ def test_refresh_reuses_one_loaded_entry_list(monkeypatch, tmp_path):
             refreshed.append(("status", value))
 
     class Window:
+        vital_charts = []
         db_path = tmp_path / "weights.sqlite"
         status_label = StatusLabel()
 

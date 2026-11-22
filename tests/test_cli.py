@@ -59,7 +59,7 @@ def test_graph_command_is_not_sent_to_weight_parser(
 
     captured = capsys.readouterr()
     assert exit_code == 0
-    assert captured.out == "TERMINAL GRAPH\n"
+    assert captured.out == "TERMINAL GRAPH\nBlood pressure: No measurements to graph.\nResting heart rate: No measurements to graph.\n"
     assert captured.err == ""
     assert len(rendered_entries) == 1
     assert rendered_entries[0] == []
@@ -72,7 +72,7 @@ def test_graph_command_empty_database_is_clear(tmp_path, capsys):
 
     captured = capsys.readouterr()
     assert exit_code == 0
-    assert captured.out == "No measurements to graph.\n"
+    assert captured.out == "No measurements to graph.\nBlood pressure: No measurements to graph.\nResting heart rate: No measurements to graph.\n"
     assert captured.err == ""
 
 
@@ -98,7 +98,7 @@ def test_graph_command_with_data_prints_only_graph(
     assert cli.main(["--db-path", str(db_path), "graph"]) == 0
 
     captured = capsys.readouterr()
-    assert captured.out == "GRAPH WITH DATA\n"
+    assert captured.out == "GRAPH WITH DATA\nBlood pressure: No measurements to graph.\nResting heart rate: No measurements to graph.\n"
     assert "Date        Weight kg" not in captured.out
 
 
@@ -191,7 +191,7 @@ def test_vitals_flags_record_and_replace_today(tmp_path, capsys):
 
     captured = capsys.readouterr()
     assert "Updated 128/80 mmHg and 63 bpm for 2026-10-19." in captured.out
-    assert "2026-10-19          128/80           63" in captured.out
+    assert any(line.split() == ["2026-10-19", "-", "128/80", "63"] for line in captured.out.splitlines())
     assert "132/84" not in captured.out
 
 
@@ -236,7 +236,7 @@ def test_version_output(capsys):
 
     captured = capsys.readouterr()
     assert exit_code == 0
-    assert captured.out == "weightrail 0.4.0\n"
+    assert captured.out == "weightrail 0.5.0\n"
     assert captured.err == ""
 
 
@@ -250,3 +250,17 @@ def test_taipei_date_boundary_uses_taipei_not_machine_timezone():
 
     assert cli.taipei_date_from_datetime(before_midnight) == date(2026, 7, 5)
     assert cli.taipei_date_from_datetime(after_midnight) == date(2026, 7, 6)
+
+
+def test_combined_table_keeps_dates_with_missing_metrics(capsys):
+    from weightrail.db import WeightEntry, VitalEntry
+    cli.print_table(
+        [WeightEntry("2026-11-01", 122.5), WeightEntry("2026-11-03", 122.0)],
+        [VitalEntry("2026-11-02", 120, 80, 70), VitalEntry("2026-11-03", 125, 82, 72)],
+    )
+    rows = [line.split() for line in capsys.readouterr().out.splitlines()[2:]]
+    assert rows == [
+        ["2026-11-01", "122.5", "-", "-"],
+        ["2026-11-02", "-", "120/80", "70"],
+        ["2026-11-03", "122.0", "125/82", "72"],
+    ]

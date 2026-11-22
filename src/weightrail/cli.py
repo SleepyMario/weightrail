@@ -24,7 +24,7 @@ from .db import (
     upsert_vitals,
     upsert_weight,
 )
-from .graph import render_graph
+from .graph import render_graph, render_vital_graph
 from .stats import calculate_stats, calculate_trend, format_stats, format_summary
 
 
@@ -100,6 +100,8 @@ def main(argv: list[str] | None = None, today_provider: Callable[[], date] | Non
 
         if graph_requested:
             print(render_graph(entries))
+            print(render_vital_graph(vital_entries, "blood_pressure"))
+            print(render_vital_graph(vital_entries, "heart_rate"))
             return 0
 
         if args.summary:
@@ -112,11 +114,11 @@ def main(argv: list[str] | None = None, today_provider: Callable[[], date] | Non
             or args.import_path is not None
             or all(value is not None for value in vital_values)
         ):
-            print_table(entries)
-            print()
-            print_vitals_table(vital_entries)
+            print_table(entries, vital_entries)
             print()
             print(render_graph(entries))
+            print(render_vital_graph(vital_entries, "blood_pressure"))
+            print(render_vital_graph(vital_entries, "heart_rate"))
             print()
             print(format_summary(calculate_trend(entries)))
             return 0
@@ -159,15 +161,22 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def print_table(entries) -> None:
-    if not entries:
+def print_table(entries, vital_entries=()) -> None:
+    weights = {entry.date: entry.weight_kg for entry in entries}
+    vitals = {entry.date: entry for entry in vital_entries}
+    dates = sorted(weights.keys() | vitals.keys())
+    if not dates:
         print("No measurements recorded.")
         return
 
-    print("Date        Weight kg")
-    print("----------  ---------")
-    for entry in entries:
-        print(f"{entry.date}  {entry.weight_kg:9.1f}")
+    print("Date        Weight kg  Blood pressure mmHg  Resting HR bpm")
+    print("----------  ---------  -------------------  --------------")
+    for day in dates:
+        weight = f"{weights[day]:.1f}" if day in weights else "-"
+        vital = vitals.get(day)
+        pressure = f"{vital.systolic_mmhg}/{vital.diastolic_mmhg}" if vital else "-"
+        heart_rate = str(vital.resting_heart_rate_bpm) if vital else "-"
+        print(f"{day}  {weight:>9}  {pressure:>19}  {heart_rate:>14}")
 
 
 def print_vitals_table(entries) -> None:

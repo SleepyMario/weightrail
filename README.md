@@ -92,8 +92,8 @@ scripts/build-deb.sh
 Then install the resulting artifacts:
 
 ```bash
-sudo apt install ./weightrail_0.4.0-1_all.deb \
-  ./weightrail-gui_0.4.0-1_all.deb
+sudo apt install ./weightrail_0.5.0-1_all.deb \
+  ./weightrail-gui_0.5.0-1_all.deb
 ```
 
 The base package installs `/usr/bin/weightrail`. Install the separate
@@ -116,7 +116,7 @@ The published Docker image is CLI-only, targets Linux amd64, and runs
 latest tag from Docker Hub:
 
 ```bash
-docker pull sleepiestmario/weightrail:0.4.0
+docker pull sleepiestmario/weightrail:0.5.0
 docker pull sleepiestmario/weightrail:latest
 ```
 
@@ -141,7 +141,7 @@ and summaries remain fully functional.
 An ebuild is present at:
 
 ```text
-gentoo/app-misc/weightrail/weightrail-0.4.0.ebuild
+gentoo/app-misc/weightrail/weightrail-0.5.0.ebuild
 ```
 
 Current Gentoo status:
@@ -396,3 +396,11 @@ git push origin v0.2.0
 ## Licence
 
 MIT. See [LICENSE](LICENSE).
+
+### Vital-sign graphs
+
+The Linux and Windows interfaces provide Weight, Blood pressure, and Heart rate tabs. Blood pressure plots systolic and diastolic together in mmHg; resting heart rate has its own bpm graph. Recorded dates retain calendar spacing. `weightrail graph` and `--show` also include both vital-sign graphs. Existing weight trend controls remain on the Weight tab.
+
+## Android preview
+
+Version 0.5.0 includes a small native Android app for Android 8.0 or newer, with local measurement entry and recent history. Desktop synchronization and Android charts are not yet implemented. See [android/README.md](android/README.md).

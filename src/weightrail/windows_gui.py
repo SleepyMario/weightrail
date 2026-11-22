@@ -19,6 +19,7 @@ from .db import (
     upsert_weight,
 )
 from .gui_chart import (
+    render_vital_chart,
     ALL_SERIES,
     LINEAR_TREND,
     MEASUREMENTS,
@@ -166,8 +167,19 @@ class WeightrailWindowsApp:
             self.stats_values[key] = value
             stats.columnconfigure(column, weight=1)
 
-        graph = ttk.LabelFrame(outer, text="Weight history", padding=8)
-        graph.pack(fill="both", expand=True, pady=(0, 12))
+        charts = ttk.Notebook(outer)
+        charts.pack(fill="both", expand=True, pady=(0, 12))
+        graph = ttk.Frame(charts, padding=8)
+        charts.add(graph, text="Weight")
+        self.vital_charts = []
+        for metric, title in (("blood_pressure", "Blood pressure"), ("heart_rate", "Heart rate")):
+            tab = ttk.Frame(charts, padding=8)
+            charts.add(tab, text=title)
+            figure = Figure(figsize=(8, 4.2), dpi=100)
+            axes = figure.add_subplot(111)
+            canvas = FigureCanvasTkAgg(figure, master=tab)
+            canvas.get_tk_widget().pack(fill="both", expand=True)
+            self.vital_charts.append((metric, figure, axes, canvas))
         self.figure = Figure(figsize=(8, 4.2), dpi=100)
         self.axes = self.figure.add_subplot(111)
         self.canvas = FigureCanvasTkAgg(self.figure, master=graph)
@@ -306,6 +318,10 @@ class WeightrailWindowsApp:
                 ),
             )
         self.render_chart()
+        for metric, figure, axes, canvas in self.vital_charts:
+            render_vital_chart(axes, self.vital_entries, metric)
+            figure.tight_layout()
+            canvas.draw_idle()
 
     def render_chart(self) -> None:
         from matplotlib import dates as mdates

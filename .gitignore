@@ -19,3 +19,5 @@ dist/
 *.sqlite-shm
 *.sqlite-wal
 .release-check/
+
+android/build/

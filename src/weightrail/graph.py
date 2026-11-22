@@ -72,3 +72,25 @@ def render_graph(
             label="Monthly trend",
         )
     return plt.build()
+
+
+def render_vital_graph(entries, metric):
+    from .gui_chart import VITAL_CHARTS
+    title, unit, series = VITAL_CHARTS[metric]
+    if not entries:
+        return f"{title}: No measurements to graph."
+    try:
+        import plotext as plt
+    except ImportError:
+        return "Terminal graph unavailable: install the optional 'plotext' dependency."
+    ordered = sorted(entries, key=lambda entry: date.fromisoformat(entry.date))
+    first = date.fromisoformat(ordered[0].date)
+    days = [(date.fromisoformat(entry.date) - first).days for entry in ordered]
+    plt.clear_figure()
+    plt.plotsize(80, 20)
+    plt.title(title)
+    plt.xlabel(f"days since {first.isoformat()}")
+    plt.ylabel(unit)
+    for field, label, color in series:
+        plt.plot(days, [getattr(entry, field) for entry in ordered], marker="dot", label=label, color=color.split(":")[1])
+    return plt.build()
