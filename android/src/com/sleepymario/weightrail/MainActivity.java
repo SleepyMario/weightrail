@@ -32,7 +32,7 @@ public class MainActivity extends Activity {
         text("Recent measurements",22); history=text("",16);
         db=openOrCreateDatabase("weightrail.sqlite",MODE_PRIVATE,null);
         db.execSQL("CREATE TABLE IF NOT EXISTS measurements (day TEXT PRIMARY KEY, weight REAL, systolic INTEGER, diastolic INTEGER, pulse INTEGER)");
-        save.setOnClickListener(v -> save()); refresh();
+        save.setOnClickListener(new View.OnClickListener() { public void onClick(View v) { save(); } }); refresh();
     }
     private TextView text(String value,int size) {
         TextView v=new TextView(this); v.setText(value);v.setTextSize(size);v.setPadding(0,10,0,10);column.addView(v);return v;
